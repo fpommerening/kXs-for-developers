@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: inlets
+  labels:
+    app: inlets
+spec:
+  type: ClusterIP
+  ports:
+    - name: tunnel
+      port: 9090
+      protocol: TCP
+      targetPort: 9090
+    - name: public
+      port: 8080
+      protocol: TCP
+      targetPort: 8080
+  selector:
+    app: inlets

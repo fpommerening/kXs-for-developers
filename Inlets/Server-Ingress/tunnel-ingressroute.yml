@@ -1,0 +1,15 @@
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: inlets-tunnel-ingressroute
+spec:
+  entryPoints:
+  - websecure
+  routes:
+  - match: Host(`inlets.demo-apps.de`)
+    kind: Rule
+    services:
+    - name: inlets
+      port: 9090
+  tls:
+    certResolver: lets-encrypt-prod

@@ -1,0 +1,85 @@
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  namespace: kube-system
+  name: traefik-ingress-controller
+---
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  namespace: kube-system
+  name: traefik
+  labels:
+    app: traefik
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: traefik
+  template:
+    metadata:
+      labels:
+        app: traefik
+      annotations:
+        container.apparmor.security.beta.kubernetes.io/traefik: runtime/default
+    spec:
+      serviceAccountName: traefik-ingress-controller
+      securityContext:
+        fsGroup: 65534
+      containers:
+        - name: traefik
+          image: traefik:v2.3
+          args:
+            - --api.dashboard=true
+            - --ping=true
+            - --accesslog
+            - --entrypoints.web.address=:8080
+            - --entrypoints.websecure.address=:8443
+            - --entrypoints.traefik.address=:9090
+            - --providers.kubernetescrd
+            - --providers.kubernetesingress
+            - --certificatesresolvers.lets-encrypt-prod.acme.tlschallenge
+            - --certificatesresolvers.lets-encrypt-prod.acme.storage=/etc/traefik/certs/acme.json
+            - --certificatesresolvers.lets-encrypt-prod.acme.email=letsencrypt@container-training.de
+            - --entrypoints.web.http.redirections.entrypoint.to=:443
+            - --entrypoints.web.http.redirections.entrypoint.scheme=https
+            - --log
+            - --log.level=INFO
+          securityContext:
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            # Run the container as nobody:nogroup
+            runAsUser: 65534
+            runAsGroup: 65534
+            capabilities:
+              drop:
+                - ALL
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /ping
+              port: 9090
+              scheme: HTTP
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 3
+          resources:
+            limits:
+              memory: '100Mi'
+              cpu: '250m'
+          ports:
+            - name: web
+              containerPort: 8080
+            - name: websecure
+              containerPort: 8443
+            - name: admin
+              containerPort: 9090
+          volumeMounts:
+            - name: certificates
+              mountPath: /etc/traefik/certs
+      volumes:
+        - name: certificates
+          persistentVolumeClaim:
+            claimName: traefik-certs-pvc
+          

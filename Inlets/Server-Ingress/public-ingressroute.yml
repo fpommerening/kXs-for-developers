@@ -1,0 +1,13 @@
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: inlets-public-ingressroute
+spec:
+  entryPoints:
+  - web
+  routes:
+  - match: Host(`public.demo-apps.de`)
+    kind: Rule
+    services:
+    - name: inlets
+      port: 8080

@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: led-matrix-dep
+spec:
+  selector:
+    matchLabels:
+    app: led-matrix
+  template:
+    metadata:
+      labels:
+        app: led-matrix
+    spec:
+      containers:
+      - name: app
+        image: fpommerening/container-training:raspi-led-matrix
+        ports:
+        - containerPort: 80
+        securityContext:
+          privileged: true
+      - name: tunnel
+        image: inlets/inlets:2.7.6
+        command: ["inlets"]
+        args:
+        - "client"
+        - "--remote=wss://inlets.demo-apps.de:443"
+        - "--upstream=http://127.0.0.1:80"
+        - "--token-from=/var/inlets/token"
+        volumeMounts:
+        - name: inlets-token-volume
+          mountPath: /var/inlets/
+      volumes:
+        - name: inlets-token-volume
+          secret:
+            secretName: inlets-token

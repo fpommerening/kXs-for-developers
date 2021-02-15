@@ -1,0 +1,13 @@
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: webapp-ingress-nontls
+spec:
+  entryPoints:
+  - web
+  routes:
+  - match: Host(`webapp.demo-apps.de`)
+    kind: Rule
+    services:
+    - name: webapp-cluster-srv
+      port: 80

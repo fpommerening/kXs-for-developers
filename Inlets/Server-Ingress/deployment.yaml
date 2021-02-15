@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: inlets
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: inlets
+  template:
+    metadata:
+      labels:
+        app: inlets
+    spec:
+      containers:
+      - name: inlets
+        image: inlets/inlets:2.7.6        
+        command: ["inlets"]
+        args:
+        - "server"
+        - "--control-port=9090"
+        - "--port=8080"
+        - "--token-from=/var/inlets/token"
+        volumeMounts:
+          - name: inlets-token-volume
+            mountPath: /var/inlets/
+      volumes:
+        - name: inlets-token-volume
+          secret:
+            secretName: inlets-token
