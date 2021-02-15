@@ -1,0 +1,7 @@
+k3sup server --ip SERVER1-IP --k3s-channel stable --datastore='mysql://dbuser:dbpassword@tcp(DB-SERVER:3306)/DATABASE'  --tls-san LB-IP --k3s-extra-args '--no-deploy traefik --node-taint CriticalAddonsOnly=true:NoExecute'
+k3sup server --ip SERVER2-IP --k3s-channel stable --datastore='mysql://dbuser:dbpassword@tcp(DB-SERVER:3306)/DATABASE'  --tls-san LB-IP --k3s-extra-args '--no-deploy traefik --node-taint CriticalAddonsOnly=true:NoExecute'
+
+  k3sup join --ip AGENT1-IP --k3s-channel stable --server-ip LB-IP --server-ssh-port 6222
+  k3sup join --ip AGENT2-IP --k3s-channel stable --server-ip LB-IP --server-ssh-port 6222
+  k3sup join --ip AGENT3-IP --k3s-channel stable --server-ip LB-IP --server-ssh-port 6222
+
