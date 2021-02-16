@@ -14,12 +14,13 @@ spec:
     spec:
       containers:
       - name: inlets
-        image: inlets/inlets:2.7.6        
+        image: ghcr.io/inlets/inlets:3.0.0        
         command: ["inlets"]
         args:
         - "server"
         - "--control-port=9090"
         - "--port=8080"
+        - "--print-token"
         - "--token-from=/var/inlets/token"
         volumeMounts:
           - name: inlets-token-volume
