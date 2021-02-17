@@ -5,7 +5,7 @@ metadata:
 spec:
   selector:
     matchLabels:
-    app: led-matrix
+      app: led-matrix
   template:
     metadata:
       labels:
@@ -17,6 +17,7 @@ spec:
         ports:
         - containerPort: 80
         securityContext:
+        # necessary for SPI access to led matrix
           privileged: true
       - name: tunnel
         image: ghcr.io/inlets/inlets:3.0.0
