@@ -24,7 +24,7 @@ spec:
         command: ["inlets"]
         args:
         - "client"
-        - "--remote=wss://inlets.demo-apps.de"
+        - "--url=wss://inlets.demo-apps.de"
         - "--upstream=http://127.0.0.1:80"
         - "--token-from=/var/inlets/token"
         volumeMounts:
