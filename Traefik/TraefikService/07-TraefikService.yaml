@@ -1,0 +1,17 @@
+apiVersion: traefik.containo.us/v1alpha1
+kind: TraefikService
+metadata:
+  name: webapp-traefik-service
+  namespace: default
+spec:
+  weighted:
+    services:
+      - name: webapp-v1-srv
+        port: 80
+        weight: 50
+      - name: webapp-v2-srv
+        port: 80
+        weight: 30
+      - name: webapp-v3-srv
+        port: 80
+        weight: 10

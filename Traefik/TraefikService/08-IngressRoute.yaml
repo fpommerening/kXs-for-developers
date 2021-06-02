@@ -1,0 +1,14 @@
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: webapp-ingress-route
+spec:
+  entryPoints:
+    - web
+  routes:
+  - match: Host(`canary.t.container-training.de`)
+    kind: Rule
+    Priority:  10
+    services:
+    - name: webapp-traefik-service
+      kind: TraefikService
