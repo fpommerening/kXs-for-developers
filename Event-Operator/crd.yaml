@@ -1,0 +1,55 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: eventportals.crd.container-training.de
+
+spec:
+  group: crd.container-training.de
+  scope: Namespaced
+  names:
+    kind: EventPortal
+    plural: eventportals
+    singular: eventportal
+  versions:
+  - name: v1
+    served: true
+    storage: true
+    schema:
+      openAPIV3Schema:
+        type: object
+        description: "configuration for a event portal"
+        properties:
+          spec:
+            type: object
+            properties:
+              namespace:
+                type: string
+              server:
+                type: string
+              sshUser:
+                type: string
+              sshPassword:
+                type: string
+              portalPassword:
+                type: string
+              baseUrl:
+                type: string
+              shellInABox:
+                type: object
+                properties:
+                  image:
+                    type: string
+                  prefix:
+                    type: string
+                  port:
+                    type: integer
+              codeServer:
+                type: object
+                properties:
+                  image:
+                    type: string
+                  prefix:
+                    type: string
+                  port:
+                    type: integer
+              

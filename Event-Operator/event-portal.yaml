@@ -1,0 +1,12 @@
+apiVersion: "crd.container-training.de/v1"
+kind: EventPortal
+metadata:
+  name: trainer  
+spec:
+  namespace: "my-user-1"
+  server: "192.168.8.1"
+  sshUser: "trainer"
+  sshPassword: "SetAPassword"
+  portalPassword: "SportFrei"
+  baseUrl: "t.container-training.de"
+  
