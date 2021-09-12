@@ -1,0 +1,37 @@
+@model System.Collections.Generic.IReadOnlyList<FP.ContainerTraining.EventOperator.Models.EventPortalModel>
+
+@{
+    ViewData["Title"] = "Portale";
+}
+
+<div class="row">
+    <h2>Portale</h2>
+</div>
+
+<div class="row">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Namespace</th>
+                <th>Server</th>
+                <th>Erstellt am</th>
+                <th>&nbsp;</th>
+            </tr>
+        </thead>
+        <tbody>
+        @foreach (var item in @Model)
+        {
+            <tr>
+                <td>@item.Name</td>
+                <td>@item.Namespace</td>
+                <td>@item.Server</td>
+                <td>@item.CreationTimestamp</td>
+                <td>@Html.ActionLink("Oeffnen", "Detail", new { item.Name }, new { @class = "btn btn-primary" })</td>
+            </tr>
+        }
+        </tbody>
+    </table>
+
+</div>
+
