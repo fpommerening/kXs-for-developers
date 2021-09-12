@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: event-operator-dep
+  labels:
+    app: event-operator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: event-operator
+  template:
+    metadata:
+      labels:
+        app: event-operator
+    spec:
+      serviceAccountName: event-operator-service-account
+      containers:
+        - name: app
+          image: "fpommerening/container-training:event-operator"
+          

@@ -1,0 +1,51 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: event-operator-cluster-role
+  labels:
+    app: event-operator
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - namespaces
+  - persistentvolumeclaims
+  - secrets
+  - configmaps
+  - services
+  verbs:
+  - get
+  - list
+  - delete
+  - create  
+  - update
+- apiGroups:
+  - "apps"
+  resources:
+  - deployments
+  verbs:
+  - get
+  - list
+  - delete
+  - create  
+  - update
+- apiGroups:
+  - "traefik.containo.us"
+  resources:
+  - ingressroutes
+  verbs:
+  - get
+  - list
+  - delete
+  - create  
+  - update
+- apiGroups:
+  - "crd.container-training.de"
+  resources:
+  - eventportals
+  verbs:
+  - get
+  - list
+  - watch
+
+

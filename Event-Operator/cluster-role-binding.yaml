@@ -1,0 +1,14 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: event-operator-cluster-role-binding
+  labels:
+   app: event-operator
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name:  event-operator-cluster-role
+subjects:
+  - kind: ServiceAccount
+    namespace: portale
+    name:  event-operator-service-account
