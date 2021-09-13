@@ -6,55 +6,69 @@
 <div class="form-group row">
     @Html.LabelFor(x => x.Name, new { @class = "col-2 col-form-label" })
 
-    <div class="col-4">
+    <div class="col-2">
         @Html.TextBoxFor(x => x.Name, new { @class = "form-control", @readonly = "readonly" })
     </div>
-    @Html.LabelFor(x => x.Namespace, new { @class = "col-2 col-form-label" })
-    <div class="col-4">
+    @Html.LabelFor(x => x.Namespace, new { @class = "col-1 col-form-label" })
+    <div class="col-3">
         @Html.TextBoxFor(x => x.Namespace, new { @class = "form-control", @readonly = "readonly" })
+    </div>
+    @Html.LabelFor(x => x.BaseUrl, new { @class = "col-1 col-form-label" })
+    <div class="col-3">
+        @Html.TextBoxFor(x => x.BaseUrl, new { @class = "form-control", @readonly = "readonly" })
     </div>
 </div>
 <div class="form-group row">
   
     @Html.LabelFor(x => x.Server, new { @class = "col-2 col-form-label" })
-    <div class="col-4">
+    <div class="col-2">
         @Html.TextBoxFor(x => x.Server, new { @class = "form-control", @readonly = "readonly" })
     </div>
-    @Html.LabelFor(x => x.BaseUrl, new { @class = "col-2 col-form-label" })
-    <div class="col-4">
-        @Html.TextBoxFor(x => x.BaseUrl, new { @class = "form-control", @readonly = "readonly" })
+    @Html.LabelFor(x => x.SshUser, new { @class = "col-1 col-form-label" })
+    <div class="col-3">
+        @Html.TextBoxFor(x => x.SshUser, new { @class = "form-control", @readonly = "readonly" })
     </div>
+    @Html.LabelFor(x => x.SshPassword, new { @class = "col-1 col-form-label" })
+    <div class="col-3">
+        @Html.TextBoxFor(x => x.SshPassword, new { @class = "form-control", @readonly = "readonly" })
+    </div>
+   
+</div>
+
+<div class="form-group row">
+    @Html.LabelFor(x => x.PortalPassword, new { @class = "col-2 col-form-label" })
+    <div class="col-6">
+        @Html.TextBoxFor(x => x.PortalPassword, new { @class = "form-control", @readonly = "readonly" })
+    </div>
+    <div class="col col-4"></div>
+
 </div>
 
 <div class="form-group row">
     <div class="col col-2">
-        Code-Server <br />
-        @Html.ActionLink("Neustarten", "RestartCodeServer", new { @Model.Name }, new { @class = "btn btn-primary" })
+        Code-Server
+        
     </div>
     <div class="col col-10">
-        <div class="row">
-        </div>
-        <div class="form-group row">
-            @Html.LabelFor(x => x.CodeServer.Image, new { @class = "col-1 col-form-label" })
-            <div class="col-5">
+        <div class="row form-group">
+            @Html.LabelFor(x => x.CodeServer.Image, new { @class = "col-2 col-form-label" })
+            <div class="col-7">
                 @Html.TextBoxFor(x => x.CodeServer.Image, new { @class = "form-control", @readonly = "readonly" })
             </div>
-            @Html.LabelFor(x => x.CodeServer.Port, new { @class = "col-1 col-form-label" })
+            <div class="col col-3">
+                @Html.ActionLink("Neustarten", "RestartCodeServer", new { @Model.Name }, new { @class = "btn btn-primary" })
+            </div>
+        </div>
+        <div class="row form-group">
+            @Html.LabelFor(x => x.CodeServer.Port, new { @class = "col-2 col-form-label" })
             <div class="col-2">
                 @Html.TextBoxFor(x => x.CodeServer.Port, new { @class = "form-control", @readonly = "readonly" })
             </div>
-            @Html.LabelFor(x => x.CodeServer.Prefix, new { @class = "col-1 col-form-label" })
-            <div class="col-2">
+            <div class="col-3"></div>
+            @Html.LabelFor(x => x.CodeServer.Prefix, new { @class = "col-2 col-form-label" })
+            <div class="col-3">
                 @Html.TextBoxFor(x => x.CodeServer.Prefix, new { @class = "form-control", @readonly = "readonly" })
             </div>
-        </div>
-        <div class="form-group row">
-            @Html.LabelFor(x => x.PortalPassword, new { @class = "col-1 col-form-label" })
-            <div class="col-5">
-                @Html.TextBoxFor(x => x.PortalPassword, new { @class = "form-control", @readonly = "readonly" })
-            </div>
-            <div class="col col-6"></div>
-
         </div>
     </div>
 </div>
@@ -63,33 +77,26 @@
 <div class="form-group row">
     <div class="col col-2">
         Console <br />
-        @Html.ActionLink("Neustarten", "RestartConsole", new { @Model.Name }, new { @class = "btn btn-primary" })
     </div>
     <div class="col col-10">
-        <div class="row">
-        </div>
-        <div class="form-group row">
-            @Html.LabelFor(x => x.ShellInABox.Image, new { @class = "col-1 col-form-label" })
-            <div class="col-5">
+        <div class="row form-group">
+            @Html.LabelFor(x => x.ShellInABox.Image, new { @class = "col-2 col-form-label" })
+            <div class="col-7">
                 @Html.TextBoxFor(x => x.ShellInABox.Image, new { @class = "form-control", @readonly = "readonly" })
             </div>
-            @Html.LabelFor(x => x.ShellInABox.Port, new { @class = "col-1 col-form-label" })
+            <div class="col col-3">
+                @Html.ActionLink("Neustarten", "RestartConsole", new { @Model.Name }, new { @class = "btn btn-primary" })
+            </div>
+        </div>
+        <div class="row form-group">
+            @Html.LabelFor(x => x.ShellInABox.Port, new { @class = "col-2 col-form-label" })
             <div class="col-2">
                 @Html.TextBoxFor(x => x.ShellInABox.Port, new { @class = "form-control", @readonly = "readonly" })
             </div>
-            @Html.LabelFor(x => x.ShellInABox.Prefix, new { @class = "col-1 col-form-label" })
-            <div class="col-2">
+            <div class="col-3"></div>
+            @Html.LabelFor(x => x.ShellInABox.Prefix, new { @class = "col-2 col-form-label" })
+            <div class="col-3">
                 @Html.TextBoxFor(x => x.ShellInABox.Prefix, new { @class = "form-control", @readonly = "readonly" })
-            </div>
-        </div>
-        <div class="form-group row">
-            @Html.LabelFor(x => x.SshUser, new { @class = "col-1 col-form-label" })
-            <div class="col-5">
-                @Html.TextBoxFor(x => x.SshUser, new { @class = "form-control", @readonly = "readonly" })
-            </div>
-            @Html.LabelFor(x => x.SshPassword, new { @class = "col-1 col-form-label" })
-            <div class="col-5">
-                @Html.TextBoxFor(x => x.SshPassword, new { @class = "form-control", @readonly = "readonly" })
             </div>
         </div>
     </div>
