@@ -1,122 +1,185 @@
 ﻿using System.Device.Spi;
-using System.Resources;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
+using Iot.Device.Max7219;
 
-namespace FP.ContainerTraining.RaspiLedMatrix.Business
+namespace FP.ContainerTraining.RaspiLedMatrix.Business;
+public class MatrixRunner
 {
-    public class MatrixRunner
+    private readonly MatrixRepository _matrixRepository;
+
+    public MatrixRunner(MatrixRepository matrixRepository)
     {
-        private Color _color = Color.None;
-        private Speed _speed = Speed.None;
+        _matrixRepository = matrixRepository;
+        _writeBuffer = new byte[4 * _matrixRepository.CascadedDevices];
+    }
 
-        public Color Color
+    private readonly byte[] _writeBuffer;
+
+    public void Run()
+    {
+        Task.Run(() =>
         {
-            get => _color;
-            set
+            var busId = 0;
+            var chipSelectLine = -1;
+
+            var settings = new SpiConnectionSettings(busId, chipSelectLine);
+            settings.ClockFrequency = 10_000_00;
+            var device = SpiDevice.Create(settings);
+
+            do
             {
-                if (_color != value)
+                if (_matrixRepository.Color == Color.None)
                 {
-                    _color = value;
-                    Clear = true;
+                    System.Threading.Thread.Sleep(2_000);
                 }
 
-            } 
-        }
-
-        public Speed Speed
-        {
-            get => _speed;
-            set
-            {
-                if (_speed != value)
+                switch (_matrixRepository.CurrentRotation)
                 {
-                    _speed = value;
-                    Clear = true;
+                    case RotationType.None:
+                        WriteBufferWithoutRotation(device);
+                        break;
+                    case RotationType.Half:
+                        WriteBufferRotateHalf(device);
+                        break;
+                    case RotationType.Right:
+                        WriteBufferRotateRight(device);
+                        break;
+                    case RotationType.Left:
+                        WriteBufferRotateLeft(device);
+                        break;
                 }
+                    
+            } while (true);
+        });
+    }
+
+    private void WriteBufferWithoutRotation(SpiDevice device)
+    {
+
+        for (var digit = 0; digit < MatrixRepository.NumDigits; digit++)
+        {
+            var i = 0;
+            for (var deviceId = _matrixRepository.CascadedDevices - 1; deviceId >= 0; deviceId--)
+            {
+                var shiftValue = 0x01 << digit;
+
+                _writeBuffer[i++] = _matrixRepository.Color == Color.Red
+                    ? (byte) ~_matrixRepository.CurrentBuffer[deviceId, digit]
+                    : (byte) 0xFF;
+                _writeBuffer[i++] = _matrixRepository.Color == Color.Blue
+                    ? (byte) ~_matrixRepository.CurrentBuffer[deviceId, digit]
+                    : (byte) 0xFF;
+                _writeBuffer[i++] = _matrixRepository.Color == Color.Green
+                    ? (byte) ~_matrixRepository.CurrentBuffer[deviceId, digit]
+                    : (byte) 0xFF;
+
+                _writeBuffer[i++] = (byte) shiftValue;
             }
+
+            device.Write(_writeBuffer);
+            System.Threading.Thread.Sleep(2);
         }
+    }
 
-        private bool Clear { get; set; }
-
-        public void Run()
+    private void WriteBufferRotateHalf(SpiDevice device)
+    {
+        for (var digit = 0; digit < MatrixRepository.NumDigits; digit++)
         {
-            Task.Run(() =>
+            var i = 0;
+            for (var deviceId = _matrixRepository.CascadedDevices - 1; deviceId >= 0; deviceId--)
             {
-                var busId = 0;
-                var chipSelectLine = -1;
+                var shiftValue = 0x01 << digit;
 
-                var settings = new SpiConnectionSettings(busId, chipSelectLine);
-                settings.ClockFrequency = 1000000;
-                SpiDevice device = SpiDevice.Create(settings);
+                var b = _matrixRepository.CurrentBuffer[deviceId, 7 - digit];
+                // reverse bits in byte
+                b = (byte)((b * 0x0202020202 & 0x010884422010) % 1023);
 
-                do
-                {
-                    Clear = false;
-                    Paint(device);
-                    Off(device);
-                } while (true);
-            });
+                _writeBuffer[i++] = _matrixRepository.Color == Color.Red
+                    ? (byte)~b
+                    : (byte)0xFF;
+                _writeBuffer[i++] = _matrixRepository.Color == Color.Blue
+                    ? (byte)~b
+                    : (byte)0xFF;
+                _writeBuffer[i++] = _matrixRepository.Color == Color.Green
+                    ? (byte)~b
+                    : (byte)0xFF;
+
+                _writeBuffer[i++] = (byte)shiftValue;
+            }
+            device.Write(_writeBuffer);
+            System.Threading.Thread.Sleep(2);
         }
+    }
 
-        private void Paint(SpiDevice device)
+    private void WriteBufferRotateRight(SpiDevice device)
+    {
+        for (var digit = 0; digit < MatrixRepository.NumDigits; digit++)
         {
-
-            byte[] picture = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
-
-            for (var row = 0; row < 8; row++)
+            var mask = 0x01 << digit;
+            var i = 0;
+            for (var deviceId = _matrixRepository.CascadedDevices - 1; deviceId >= 0; deviceId--)
             {
-                for (var col = 7; col >= 0; col--)
+                var shiftValue = 0x01 << digit;
+
+                byte value = 0;
+                byte targetBit = 0x80;
+                for (int bitDigit = 0; bitDigit < MatrixRepository.NumDigits; bitDigit++, targetBit >>= 1)
                 {
-                    if (Clear)
+                    if ((_matrixRepository.CurrentBuffer[deviceId, bitDigit] & mask) != 0)
                     {
-                        return;
-                    }
-
-                    var val = 0xFF >> col;
-                    picture[row] = (byte)val;
-
-                    for (var picrepeat = (int) Speed; picrepeat > 0; picrepeat--)
-                    {
-                        for (int shift = 0; shift < 8; shift++)
-                        {
-                            var shiftValue = 0x01 << shift;
-
-                            var data = new[]
-                            {
-                                Color == Color.Red ? (byte)~picture[shift] : (byte)0xFF,
-                                Color == Color.Blue ? (byte)~picture[shift] : (byte)0xFF,
-                                Color == Color.Green ? (byte)~picture[shift] : (byte)0xFF,
-                                (byte)shiftValue
-                            };
-
-                            device.Write(data);
-
-                            System.Threading.Thread.Sleep(2);
-                        }
+                        value |= targetBit;
                     }
                 }
+                _writeBuffer[i++] = _matrixRepository.Color == Color.Red
+                    ? (byte)~value
+                    : (byte)0xFF;
+                _writeBuffer[i++] = _matrixRepository.Color == Color.Blue
+                    ? (byte)~value
+                    : (byte)0xFF;
+                _writeBuffer[i++] = _matrixRepository.Color == Color.Green
+                    ? (byte)~value
+                    : (byte)0xFF;
+
+                _writeBuffer[i++] = (byte)shiftValue;
             }
+            device.Write(_writeBuffer);
+            System.Threading.Thread.Sleep(2);
         }
+    }
 
-        void Off(SpiDevice device)
+    private void WriteBufferRotateLeft(SpiDevice device)
+    {
+        for (var digit = 0; digit < MatrixRepository.NumDigits; digit++)
         {
-            byte j;
-            for (j = 0; j < 8; j++)
+            var mask = 0x80 >> digit;
+            var i = 0;
+            for (var deviceId = _matrixRepository.CascadedDevices - 1; deviceId >= 0; deviceId--)
             {
-                var l = 0x01 << j;
-                var data = new byte[]
+                var shiftValue = 0x01 << digit;
+
+                byte value = 0;
+                byte targetBit = 0x80;
+                for (int bitDigit = 0; bitDigit < MatrixRepository.NumDigits; bitDigit++, targetBit >>= 1)
                 {
-                    0xFF,
-                    0xFF,
-                    0xFF,
-                    (byte)l
-                };
+                    if ((_matrixRepository.CurrentBuffer[deviceId, bitDigit] & mask) != 0)
+                    {
+                        value |= targetBit;
+                    }
+                }
+                _writeBuffer[i++] = _matrixRepository.Color == Color.Red
+                    ? (byte)~value
+                    : (byte)0xFF;
+                _writeBuffer[i++] = _matrixRepository.Color == Color.Blue
+                    ? (byte)~value
+                    : (byte)0xFF;
+                _writeBuffer[i++] = _matrixRepository.Color == Color.Green
+                    ? (byte)~value
+                    : (byte)0xFF;
 
-                device.Write(data);
-
-                System.Threading.Thread.Sleep(2);
+                _writeBuffer[i++] = (byte)shiftValue;
             }
+            device.Write(_writeBuffer);
+            System.Threading.Thread.Sleep(2);
         }
     }
 }

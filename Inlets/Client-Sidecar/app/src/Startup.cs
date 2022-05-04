@@ -19,7 +19,9 @@ namespace FP.ContainerTraining.RaspiLedMatrix
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllers();
+            services.AddSingleton<MatrixRepository>();
             services.AddSingleton<MatrixRunner>();
+            services.AddHostedService<TextWriterService>();
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
