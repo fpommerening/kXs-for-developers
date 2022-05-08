@@ -20,35 +20,20 @@ namespace FP.ContainerTraining.RaspiLedMatrix.Controllers
             _repository = repository;
         }
 
-        [HttpPut("~/start")]
-        public IActionResult GetSpeed()
+        [HttpPut("~/text")]
+        public IActionResult StartText([FromBody] TextRequest request)
         {
-            var smiley = new byte[]
-            {
-                0b00111100,
-                0b01000010,
-                0b10100101,
-                0b10000001,
-                0b10100101,
-                0b10011001,
-                0b01000010,
-                0b00111100
-            };
-
-            for (var digit = 0; digit < 8; digit++)
-            {
-                _repository[0, digit] = smiley[digit];
-            }
-
-            _repository.Rotation = RotationType.None;
-            _repository.Flush();
+            _repository.Graphic = string.Empty;
+            _repository.Text = request.Text;
+            _repository.Rotation = RotationType.Left;
             return Accepted();
         }
 
-        [HttpPut("~/text/{val}")]
-        public IActionResult StartText([FromRoute] string val)
+        [HttpPut("~/graphics/{val}")]
+        public IActionResult StartGraphics([FromRoute] string val)
         {
-            _repository.Text = val;
+            _repository.Text = string.Empty;
+            _repository.Graphic = val;
             _repository.Rotation = RotationType.Left;
             return Accepted();
         }

@@ -1,15 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
+﻿using System.Threading;
 using System.Threading.Tasks;
 using FP.ContainerTraining.RaspiLedMatrix.Business;
 using Iot.Device.Max7219;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using MatrixGraphics = FP.ContainerTraining.RaspiLedMatrix.Business.MatrixGraphics;
 
-namespace FP.ContainerTraining.RaspiLedMatrix
+namespace FP.ContainerTraining.RaspiLedMatrix.Services
 {
     public class TextWriterService : BackgroundService
     {
@@ -28,7 +24,7 @@ namespace FP.ContainerTraining.RaspiLedMatrix
             {
                 if (!string.IsNullOrEmpty(_matrixRepository.Text))
                 {
-                    var matrixGraphics = new MatrixGraphics(_matrixRepository, Fonts.CP437);
+                    var matrixGraphics = new Business.MatrixGraphics(_matrixRepository, Fonts.CP437);
                     matrixGraphics.ShowMessage(_matrixRepository.Text, stoppingToken, alwaysScroll: true, delayInMilliseconds:80);
                 }
 

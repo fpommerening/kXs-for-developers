@@ -35,7 +35,7 @@ namespace FP.ContainerTraining.RaspiLedMatrix.Business
                 _matrixRepository.ClearAll(false);
                 foreach (var arr in textCharBytes)
                 {
-                    if (stoppingToken.IsCancellationRequested)
+                    if (stoppingToken.IsCancellationRequested || string.IsNullOrEmpty(_matrixRepository.Text))
                     {
                         return;
                     }
@@ -66,7 +66,7 @@ namespace FP.ContainerTraining.RaspiLedMatrix.Business
                 var pos = margin;
                 foreach (var arr in textCharBytes)
                 {
-                    if (stoppingToken.IsCancellationRequested)
+                    if (stoppingToken.IsCancellationRequested || string.IsNullOrEmpty(_matrixRepository.Text))
                     {
                         return;
                     }

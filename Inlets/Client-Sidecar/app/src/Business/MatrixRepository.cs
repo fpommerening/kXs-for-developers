@@ -22,6 +22,8 @@ namespace FP.ContainerTraining.RaspiLedMatrix.Business
 
         public string Text { get; set; }
 
+        public string Graphic { get; set; }
+
         public int CascadedDevices { get; set; }
 
         public int Length => CascadedDevices * NumDigits;

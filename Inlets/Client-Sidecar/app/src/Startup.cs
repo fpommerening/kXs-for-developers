@@ -1,4 +1,5 @@
 using FP.ContainerTraining.RaspiLedMatrix.Business;
+using FP.ContainerTraining.RaspiLedMatrix.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -22,6 +23,7 @@ namespace FP.ContainerTraining.RaspiLedMatrix
             services.AddSingleton<MatrixRepository>();
             services.AddSingleton<MatrixRunner>();
             services.AddHostedService<TextWriterService>();
+            services.AddHostedService<GrapficService>();
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
