@@ -2,11 +2,13 @@ apiVersion: traefik.containo.us/v1alpha1
 kind: IngressRoute
 metadata:
   name: webapp-ingress-tls
+  annotations: 
+    kubernetes.io/ingress.class: traefik-external
 spec:
   entryPoints:
   - websecure
   routes:
-  - match: Host(`webapp.demo-apps.de`)
+  - match: Host(`webapp.ddc-cloud.de`)
     kind: Rule
     services:
     - name: webapp-cluster-srv
