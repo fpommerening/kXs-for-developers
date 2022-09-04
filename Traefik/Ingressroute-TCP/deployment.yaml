@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dep-rabbitmq
+spec:
+  selector:
+    matchLabels:
+      app: rabbitmq
+  template:
+    metadata:
+      labels:
+        app: rabbitmq
+    spec:
+      containers:
+      - name: broker
+        image: rabbitmq:3-management
+        ports:
+        - name: broker
+          containerPort: 5672
+        - name: admin
+          containerPort: 15672

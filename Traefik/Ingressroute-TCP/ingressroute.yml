@@ -1,0 +1,33 @@
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRouteTCP
+metadata:
+  name: rabbitmq-broker-ingress
+  annotations: 
+    kubernetes.io/ingress.class: traefik-external
+spec:
+  entryPoints:
+  - rabbitmq
+  routes:
+  - match: HostSNI(`*`)
+    services:
+    - name: rabbitmq-cluster-srv
+      port: broker
+
+---
+
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: rabbitmq-mgm-ingress-nontls
+  annotations: 
+    kubernetes.io/ingress.class: traefik-external
+spec:
+  entryPoints:
+  - web
+  routes:
+  - match: Host(`rabbitmq-mgm.ddc-cloud.de`)
+    kind: Rule
+    services:
+    - name: rabbitmq-cluster-srv
+      port: admin
+
