@@ -1,0 +1,34 @@
+globalArguments:
+  - "--global.sendanonymoususage=false"
+  - "--global.checknewversion=false"
+
+additionalArguments:
+  - "--log.level=INFO"
+  - "--certificatesresolvers.lets-encrypt-prod.acme.tlschallenge"
+  - "--certificatesresolvers.lets-encrypt-prod.acme.storage=/data/acme.json"
+  - "--certificatesresolvers.lets-encrypt-prod.acme.email=letsencrypt@container-training.de"
+
+ports:
+  # web:
+  #  redirectTo: websecure
+  websecure:
+    tls:
+      enabled: true
+  rabbitmq:
+    port: 5672
+    expose: true
+    exposedPort: 5672
+    protocol: TCP
+    
+      
+ingressRoute:
+  dashboard:
+    enabled: false
+
+providers:
+  kubernetesCRD:
+    enabled: true
+    ingressClass: traefik-external
+
+persistence:
+  enabled: true

@@ -1,0 +1,3 @@
+helm install -n traefik -f values.yaml traefik traefik/traefik
+
+helm upgrade -n traefik -f values.yaml traefik traefik/traefik
