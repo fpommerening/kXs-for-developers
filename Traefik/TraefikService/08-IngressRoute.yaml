@@ -2,13 +2,14 @@ apiVersion: traefik.containo.us/v1alpha1
 kind: IngressRoute
 metadata:
   name: webapp-ingress-route
+  annotations: 
+    kubernetes.io/ingress.class: traefik-external
 spec:
   entryPoints:
     - web
   routes:
-  - match: Host(`canary.t.container-training.de`)
+  - match: Host(`canary.ddc-cloud.de`)
     kind: Rule
-    Priority:  10
     services:
     - name: webapp-traefik-service
       kind: TraefikService
