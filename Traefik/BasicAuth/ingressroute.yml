@@ -1,0 +1,19 @@
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: webapp-ingress-tls
+  annotations: 
+    kubernetes.io/ingress.class: traefik-external
+spec:
+  entryPoints:
+  - websecure
+  routes:
+  - match: Host(`basic-auth.ddc-cloud.de`)
+    kind: Rule
+    services:
+    - name: webapp-cluster-srv
+      port: 80
+    middlewares:
+    - name: basic-auth-mw
+  tls:
+    certResolver: lets-encrypt-prod
