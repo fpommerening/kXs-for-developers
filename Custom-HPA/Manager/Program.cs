@@ -1,6 +1,8 @@
+using FP.ContainerTraining.Hpa.Manager.Business;
 using FP.ContainerTraining.Hpa.Manager.Services;
 using Microsoft.AspNetCore.Hosting.StaticWebAssets;
 using MudBlazor.Services;
+using OpenTelemetry.Metrics;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,6 +13,11 @@ builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
 builder.Services.AddMudServices();
 builder.Services.AddGrpc();
+builder.Services.AddOpenTelemetryMetrics(otelBuilder =>
+{
+    otelBuilder.AddMeter(WorkerMetrics.Metrics.Name);
+    otelBuilder.AddPrometheusExporter();
+});
 
 var app = builder.Build();
 
@@ -33,5 +40,6 @@ app.MapGrpcService<WorkerService>();
 
 app.MapBlazorHub();
 app.MapFallbackToPage("/_Host");
+app.UseOpenTelemetryPrometheusScrapingEndpoint();
 
 app.Run();
