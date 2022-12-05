@@ -42,3 +42,37 @@ jobs:
         
     - name: Setup Docker Buildx
       uses: docker/setup-buildx-action@v2
+
+    - name: Extract metadata worker
+      id: meta_worker
+      uses: docker/metadata-action@v4
+      with:
+         images: ${{ env.REGISTRY }}/${{ github.actor }}/${{ env.IMAGE_NAME }}
+         tags: |
+           type=raw,value=hpa-worker
+
+    - name: Extract metadata manager
+      id: meta_ui
+      uses: docker/metadata-action@v4
+      with:
+         images: ${{ env.REGISTRY }}/${{ github.actor }}/${{ env.IMAGE_NAME }}
+         tags: |
+           type=raw,value=hpa-manager
+
+    - name: Build and push worker
+      uses: docker/build-push-action@v3
+      with:
+        context: ./Custom-HPA/Worker/
+        push: true
+        tags: ${{ steps.meta_worker.outputs.tags }}
+        labels: ${{ steps.meta_worker.outputs.labels }}
+      
+    - name: Build and push manager
+      uses: docker/build-push-action@v3
+      with:
+        context: ./Custom-HPA/Manager/
+        push: true
+        tags: ${{ steps.hpa-manager.outputs.tags }}
+        labels: ${{ steps.hpa-manager.outputs.labels }}
+
+
