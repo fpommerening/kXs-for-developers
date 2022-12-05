@@ -18,6 +18,8 @@ builder.Services.AddOpenTelemetryMetrics(otelBuilder =>
     otelBuilder.AddMeter(WorkerMetrics.Metrics.Name);
     otelBuilder.AddPrometheusExporter();
 });
+builder.Services.AddSingleton<IWorkerRepository,WorkerRepository>();
+builder.Services.AddHostedService<HeartbeatService>();
 
 var app = builder.Build();
 
@@ -28,8 +30,6 @@ if (!app.Environment.IsDevelopment())
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
-
-app.UseHttpsRedirection();
 
 app.UseStaticFiles();
 
