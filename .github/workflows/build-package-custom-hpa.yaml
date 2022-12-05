@@ -52,7 +52,7 @@ jobs:
            type=raw,value=hpa-worker
 
     - name: Extract metadata manager
-      id: meta_ui
+      id: meta_manager
       uses: docker/metadata-action@v4
       with:
          images: ${{ env.REGISTRY }}/${{ github.actor }}/${{ env.IMAGE_NAME }}
@@ -72,7 +72,7 @@ jobs:
       with:
         context: ./Custom-HPA/Manager/
         push: true
-        tags: ${{ steps.hpa-manager.outputs.tags }}
-        labels: ${{ steps.hpa-manager.outputs.labels }}
+        tags: ${{ steps.meta_manager.outputs.tags }}
+        labels: ${{ steps.meta_manager.outputs.labels }}
 
 
