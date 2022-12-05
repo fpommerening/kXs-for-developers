@@ -48,10 +48,13 @@ public class JobService : BackgroundService
 
             foreach (var unassignedJob in unassignedJobs)
             {
-                _logger.LogInformation("Try assigne Jobs {JobId}", unassignedJob.Id);
+                
+                _logger.LogInformation("assignedWorkers: {workers}", string.Join("|",assignedWorkers));
+                _logger.LogInformation("currentWorkers: {workers}", string.Join("|",currentWorkers.Select(x=>x.HostName)));
                 
                 var unassignedWorker = currentWorkers.FirstOrDefault(cw => assignedWorkers.All(aw => aw != cw.HostName));
                 
+                _logger.LogInformation("unassignedWorker: {workers}", unassignedWorker?.HostName);
                 while (unassignedWorker != null)
                 {
                     _logger.LogInformation("Try assigned worker {WorkerName}", unassignedWorker.HostName);
@@ -60,6 +63,9 @@ public class JobService : BackgroundService
                         _jobRepository.Assign(unassignedJob.Id, unassignedWorker.HostName);
                         assignedWorkers.Add(unassignedWorker.HostName);
                         unassignedWorker = currentWorkers.FirstOrDefault(cw => assignedWorkers.All(aw => aw != cw.HostName));
+                        _logger.LogInformation("unassignedWorker: {worker}", unassignedWorker?.HostName);
+                        _logger.LogInformation("assignedWorkers: {workers}", string.Join("|",assignedWorkers));
+                        _logger.LogInformation("currentWorkers: {workers}", string.Join("|",currentWorkers.Select(x=>x.HostName)));
                     }
                     else
                     {
