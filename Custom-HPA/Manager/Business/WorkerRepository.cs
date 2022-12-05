@@ -1,4 +1,5 @@
-﻿using FP.ContainerTraining.Hpa.Contract;
+﻿using System.Net.Http.Headers;
+using FP.ContainerTraining.Hpa.Contract;
 using Grpc.Core;
 
 namespace FP.ContainerTraining.Hpa.Manager.Business;
@@ -79,19 +80,27 @@ public class WorkerRepository : IWorkerRepository
     {
         return _workers.Values.ToArray();
     }
-}
 
-public class WorkerItem
-{
-    public string HostName { get; set; }
-        
-    public DateTime CreatedAt { get; set; }
-        
-    public DateTime LastHeartbeat { get; set; }
-    
-    public IServerStreamWriter<GetCommandResponse> CommandStream { get; set; }
-    
-    public CancellationTokenSource CancellationTokenSource { get; set; }
-    
+    public async Task<bool> AssignJob(string workerName, Guid jobId)
+    {
+        try
+        {
+            if(_workers.TryGetValue(workerName, out var worker))
+            {
+                _logger.LogInformation("Sending jobs to worker {Worker}", worker.HostName);
+                await worker.CommandStream.WriteAsync(new GetCommandResponse
+                {
+                    Command = "DoJob",
+                    Id = jobId.ToString("D")
+                });
+                _logger.LogInformation("Job to worker {Worker} succed", worker.HostName);
+                return true;
+            }
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "Job to worker {Worker} failed", workerName);
+        }
+        return false;
+    }
 }
-

@@ -60,7 +60,7 @@ public class WorkerService : BackgroundService
         
         Task.Run(async () =>
         {
-            await Task.Delay(TimeSpan.FromSeconds(30));
+            await Task.Delay(TimeSpan.FromSeconds(45));
             await client.SendResultAsync(new SendResultRequest { Id = id });
             _logger.LogInformation("Executed Task {TaskId}", id);
         });

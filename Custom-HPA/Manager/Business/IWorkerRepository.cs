@@ -11,4 +11,6 @@ public interface IWorkerRepository
     Task SendHeartbeats();
 
     IReadOnlyList<WorkerItem> GetCurrentWorker();
+
+    Task<bool> AssignJob(string worker, Guid jobId);
 }

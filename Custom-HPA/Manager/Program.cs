@@ -19,7 +19,9 @@ builder.Services.AddOpenTelemetryMetrics(otelBuilder =>
     otelBuilder.AddPrometheusExporter();
 });
 builder.Services.AddSingleton<IWorkerRepository,WorkerRepository>();
+builder.Services.AddSingleton<IJobRepository,JobRepository>();
 builder.Services.AddHostedService<HeartbeatService>();
+builder.Services.AddHostedService<JobService>();
 
 var app = builder.Build();
 
