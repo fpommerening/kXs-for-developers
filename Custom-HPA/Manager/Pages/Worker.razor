@@ -8,17 +8,16 @@
 {
     return;
 }
-
 <MudGrid Spacing="2" Justify="Justify.Center">
     @foreach (var item in _data)
     {
-        <MudItem xs="3">
-            <MudPaper Class="pa-4">
-                <MudStack Spacing="4">
+        <MudItem xs="4">
+            <MudPaper Class="pa-4" Elevation="8">
+                <MudStack>
                     <MudText Typo="Typo.h6">@item.Name</MudText>
-                    <MudText Typo="Typo.caption">Created:</MudText>
+                    <MudText Typo="Typo.caption">Created</MudText>
                     <MudText Typo="Typo.body1">@item.CreatedAt</MudText>
-                    <MudText Typo="Typo.caption">Last Heartbeat:</MudText>
+                    <MudText Typo="Typo.caption">Last Heartbeat</MudText>
                     <MudText Typo="Typo.body1">@item.LastHeartbeat</MudText>
                 </MudStack>
             </MudPaper>
