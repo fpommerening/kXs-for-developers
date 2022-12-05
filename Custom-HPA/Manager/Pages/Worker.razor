@@ -2,7 +2,6 @@
 @using FP.ContainerTraining.Hpa.Manager.Business
 
 @inject IWorkerRepository _workerRepository;
-@implements IDisposable;
 
 @if (_data == null)
 {
@@ -30,51 +29,55 @@
 
     private List<WorkerViewModel>? _data = null;
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
         _data = new List<WorkerViewModel>();
+        await RefreshWorker();
     }
 
-    protected override async  void OnAfterRender(bool firstRender)
+    protected override async void OnAfterRender(bool firstRender)
     {
         if (!firstRender) return;
         
         using var periodicTimer = new PeriodicTimer(TimeSpan.FromSeconds(10));
         while (await periodicTimer.WaitForNextTickAsync())
         {
-            if(_data == null)
-                continue;
-                
-            var currentWorkers = _workerRepository.GetCurrentWorker();
-            _data.RemoveAll(x => currentWorkers.All(cw => cw.HostName != x.Name));
-
-            foreach (var currentWorker in currentWorkers)
-            {
-                var item = _data.FirstOrDefault(x => x.Name == currentWorker.HostName);
-                if (item == null)
-                {
-                    item = new WorkerViewModel
-                    {
-                        Name = currentWorker.HostName,
-                        CreatedAt = currentWorker.CreatedAt,
-                        LastHeartbeat = currentWorker.LastHeartbeat
-                    };
-                    _data.Add(item);
-                }
-                else
-                {
-                    item.LastHeartbeat = currentWorker.LastHeartbeat;
-                }
-
-            }
-            await InvokeAsync(StateHasChanged);
+            await RefreshWorker();
         }
     }
 
-
-    public void Dispose()
+    private async Task RefreshWorker()
     {
-        
+        if (_data == null)
+        {
+            return;
+        }
+            
+                
+        var currentWorkers = _workerRepository.GetCurrentWorker();
+        _data.RemoveAll(x => currentWorkers.All(cw => cw.HostName != x.Name));
+
+        foreach (var currentWorker in currentWorkers)
+        {
+            var item = _data.FirstOrDefault(x => x.Name == currentWorker.HostName);
+            if (item == null)
+            {
+                item = new WorkerViewModel
+                {
+                    Name = currentWorker.HostName,
+                    CreatedAt = currentWorker.CreatedAt,
+                    LastHeartbeat = currentWorker.LastHeartbeat
+                };
+                _data.Add(item);
+            }
+            else
+            {
+                item.LastHeartbeat = currentWorker.LastHeartbeat;
+            }
+
+        }
+        await InvokeAsync(StateHasChanged);
+
     }
 
     internal class WorkerViewModel

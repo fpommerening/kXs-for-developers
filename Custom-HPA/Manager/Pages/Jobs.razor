@@ -13,7 +13,7 @@
     </MudItem>
     <MudItem xs="4"></MudItem>
     <MudItem xs="12">
-        <MudTable Items="Data" Hover="true" Striped="true"Bordered="true" Breakpoint="Breakpoint.Sm">
+        <MudTable Items="SortedData" Hover="true" Striped="true"Bordered="true" Breakpoint="Breakpoint.Sm">
             <HeaderContent>
                 <MudTh>Id</MudTh>
                 <MudTh>Created At</MudTh>
@@ -37,32 +37,39 @@
 
 @code {
 
-    private List<JobViewModel> Data { get; } =  new();
+    private List<JobViewModel> _data = new();
+
+    private IEnumerable<JobViewModel> SortedData
+    {
+        get { return _data.OrderBy(x => x.CompletedAt).ThenByDescending(x => x.AssignedAt).ThenBy(x => x.CreatedAt); }
+    }
 
     private int JobCount { get; set; } = 1;
 
     private async Task AddJobs()
     {
         await _jobRepository.Add(JobCount);
-        await UpdateJobs();
+        await RefreshJobs();
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (!firstRender) return;
         
+        await RefreshJobs();
+        
         using var periodicTimer = new PeriodicTimer(TimeSpan.FromSeconds(10));
         while (await periodicTimer.WaitForNextTickAsync())
         {
-            await UpdateJobs();
+            await RefreshJobs();
         }
     }
 
-    private async Task UpdateJobs()
+    private async Task RefreshJobs()
     {
         foreach (var job in _jobRepository.GetJobs().OrderByDescending(x=>x.CreatedAt))
         {
-            var vm = Data.FirstOrDefault(x => x.Id == job.Id);
+            var vm = _data.FirstOrDefault(x => x.Id == job.Id);
             if (vm == null)
             {
                 vm = new JobViewModel
@@ -70,7 +77,7 @@
                     Id = job.Id,
                     CreatedAt = job.CreatedAt
                 };
-                Data.Add(vm);
+                _data.Add(vm);
             }
             vm.AssignedAt = job.AssignedAt;
             vm.AssignedWorker = job.AssignedWorker;
