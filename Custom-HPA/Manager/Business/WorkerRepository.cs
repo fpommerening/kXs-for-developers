@@ -23,7 +23,7 @@ public class WorkerRepository : IWorkerRepository
             var cancellationTokenSource = new CancellationTokenSource();
             _workers[hostName] = new WorkerItem
             {
-                CreateAt = DateTime.UtcNow,
+                CreatedAt = DateTime.UtcNow,
                 HostName = hostName,
                 LastHeartbeat = DateTime.UtcNow,
                 CommandStream = commandStream,
@@ -77,7 +77,7 @@ public class WorkerRepository : IWorkerRepository
 
     public IReadOnlyList<WorkerItem> GetCurrentWorker()
     {
-        return _workers.Values.Where(x => x.LastHeartbeat > DateTime.UtcNow.AddMinutes(-5)).ToArray();
+        return _workers.Values.ToArray();
     }
 }
 
@@ -85,7 +85,7 @@ public class WorkerItem
 {
     public string HostName { get; set; }
         
-    public DateTime CreateAt { get; set; }
+    public DateTime CreatedAt { get; set; }
         
     public DateTime LastHeartbeat { get; set; }
     

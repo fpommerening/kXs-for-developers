@@ -1,0 +1,91 @@
+﻿@page "/Worker"
+@using FP.ContainerTraining.Hpa.Manager.Business
+
+@inject IWorkerRepository _workerRepository;
+@implements IDisposable;
+
+@if (_data == null)
+{
+    return;
+}
+
+<MudGrid Spacing="2" Justify="Justify.Center">
+    @foreach (var item in _data)
+    {
+        <MudItem xs="3">
+            <MudPaper Class="pa-4">
+                <MudStack Spacing="4">
+                    <MudText Typo="Typo.h6">@item.Name</MudText>
+                    <MudText Typo="Typo.caption">Created:</MudText>
+                    <MudText Typo="Typo.body1">@item.CreatedAt</MudText>
+                    <MudText Typo="Typo.caption">Last Heartbeat:</MudText>
+                    <MudText Typo="Typo.body1">@item.LastHeartbeat</MudText>
+                </MudStack>
+            </MudPaper>
+        </MudItem>    
+    }
+</MudGrid>
+
+
+@code {
+
+    private List<WorkerViewModel>? _data = null;
+
+    protected override void OnInitialized()
+    {
+        _data = new List<WorkerViewModel>();
+    }
+
+    protected override async  void OnAfterRender(bool firstRender)
+    {
+        if (!firstRender) return;
+        
+        using var periodicTimer = new PeriodicTimer(TimeSpan.FromSeconds(10));
+        while (await periodicTimer.WaitForNextTickAsync())
+        {
+            if(_data == null)
+                continue;
+                
+            var currentWorkers = _workerRepository.GetCurrentWorker();
+            _data.RemoveAll(x => currentWorkers.All(cw => cw.HostName != x.Name));
+
+            foreach (var currentWorker in currentWorkers)
+            {
+                var item = _data.FirstOrDefault(x => x.Name == currentWorker.HostName);
+                if (item == null)
+                {
+                    item = new WorkerViewModel
+                    {
+                        Name = currentWorker.HostName,
+                        CreatedAt = currentWorker.CreatedAt,
+                        LastHeartbeat = currentWorker.LastHeartbeat
+                    };
+                    _data.Add(item);
+                }
+                else
+                {
+                    item.LastHeartbeat = currentWorker.LastHeartbeat;
+                }
+
+            }
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+
+    public void Dispose()
+    {
+        
+    }
+
+    internal class WorkerViewModel
+    {
+                
+        public string? Name { get; init; }
+        
+        public DateTime CreatedAt { get; set; }
+        
+        public DateTime LastHeartbeat { get; set; }
+    }
+
+}

@@ -9,4 +9,6 @@ public interface IWorkerRepository
     void Remove(string hostName);
 
     Task SendHeartbeats();
+
+    IReadOnlyList<WorkerItem> GetCurrentWorker();
 }
