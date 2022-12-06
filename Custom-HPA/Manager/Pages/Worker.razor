@@ -7,20 +7,29 @@
 {
     return;
 }
-<MudGrid Spacing="2" Justify="Justify.Center">
+<MudGrid Spacing="2" >
     @foreach (var item in _data)
     {
         <MudItem xs="4">
             <MudPaper Class="pa-4" Elevation="8">
                 <MudStack>
-                    <MudText Typo="Typo.h6">@item.Name</MudText>
-                    <MudText Typo="Typo.caption">Created</MudText>
-                    <MudText Typo="Typo.body1">@item.CreatedAt</MudText>
-                    <MudText Typo="Typo.caption">Last Heartbeat</MudText>
-                    <MudText Typo="Typo.body1">@item.LastHeartbeat</MudText>
+                    <MudItem xs="12"><MudText Typo="Typo.h6">@item.Name</MudText></MudItem>        
+                    <MudStack Row="true">
+                        <MudStack>
+                            <MudText Typo="Typo.caption">Created</MudText>
+                            <MudText Typo="Typo.body1">@item.CreatedAt</MudText>
+                            <MudText Typo="Typo.caption">Last Heartbeat</MudText>
+                            <MudText Typo="Typo.body1">@item.LastHeartbeat</MudText>
+                        </MudStack>
+                        <MudChip
+                            Variant="Variant.Outlined"
+                            Color="@(item.AssignedJobId == Guid.Empty ? Color.Success : Color.Default)">
+                            @(item.AssignedJobId == Guid.Empty ? "FREI" : item.AssignedJobId.ToString("N"))
+                        </MudChip>
+                    </MudStack>
                 </MudStack>
             </MudPaper>
-        </MudItem>    
+        </MudItem>   
     }
 </MudGrid>
 
@@ -66,7 +75,9 @@
                 {
                     Name = currentWorker.HostName,
                     CreatedAt = currentWorker.CreatedAt,
-                    LastHeartbeat = currentWorker.LastHeartbeat
+                    LastHeartbeat = currentWorker.LastHeartbeat,
+                    
+                        
                 };
                 _data.Add(item);
             }
@@ -88,6 +99,8 @@
         public DateTime CreatedAt { get; set; }
         
         public DateTime LastHeartbeat { get; set; }
+        
+        public Guid AssignedJobId { get; set; }
     }
 
 }
