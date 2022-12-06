@@ -35,6 +35,7 @@ public class WorkerService : WorkerServices.WorkerServicesBase
     {
         _logger.LogInformation("Recevice Result form Task {TaskId}", request.Id);
         _jobRepository.Complete(Guid.Parse(request.Id));
+        _workerRepository.ResetJob(request.Instance);
         return Task.FromResult(new Empty());
     }
 }

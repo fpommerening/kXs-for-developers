@@ -24,4 +24,5 @@ message GetCommandResponse {
 
 message SendResultRequest{
   string id  = 1;
+  string instance = 2;
 }

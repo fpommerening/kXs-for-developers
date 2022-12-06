@@ -12,5 +12,7 @@ public interface IWorkerRepository
 
     IReadOnlyList<WorkerItem> GetCurrentWorker();
 
-    Task<bool> AssignJob(string worker, Guid jobId);
+    Task<string> AssignJob(Guid jobId);
+    
+    void ResetJob(string hostName);
 }

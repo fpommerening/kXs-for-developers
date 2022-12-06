@@ -1,5 +1,4 @@
-﻿using System.Net.Http.Headers;
-using FP.ContainerTraining.Hpa.Contract;
+﻿using FP.ContainerTraining.Hpa.Contract;
 using Grpc.Core;
 
 namespace FP.ContainerTraining.Hpa.Manager.Business;
@@ -81,26 +80,38 @@ public class WorkerRepository : IWorkerRepository
         return _workers.Values.ToArray();
     }
 
-    public async Task<bool> AssignJob(string workerName, Guid jobId)
+    public async Task<string> AssignJob(Guid jobId)
     {
+        var targetWorker = _workers.Values.FirstOrDefault(x => x.AssignedJobId == Guid.Empty);
+
+        if (targetWorker == null)
+        {
+            return string.Empty;
+        }
         try
         {
-            if(_workers.TryGetValue(workerName, out var worker))
+            _logger.LogInformation("Sending jobs to worker {Worker}", targetWorker.HostName);
+            await targetWorker.CommandStream.WriteAsync(new GetCommandResponse
             {
-                _logger.LogInformation("Sending jobs to worker {Worker}", worker.HostName);
-                await worker.CommandStream.WriteAsync(new GetCommandResponse
-                {
-                    Command = "DoJob",
-                    Id = jobId.ToString("D")
-                });
-                _logger.LogInformation("Job to worker {Worker} succed", worker.HostName);
-                return true;
-            }
+                Command = "DoJob",
+                Id = jobId.ToString("D")
+            });
+            _logger.LogInformation("Job to worker {Worker} succed", targetWorker.HostName);
+            targetWorker.AssignedJobId = jobId;
+            return targetWorker.HostName;
         }
         catch (Exception e)
         {
-            _logger.LogError(e, "Job to worker {Worker} failed", workerName);
+            _logger.LogError(e, "Job to worker {Worker} failed", targetWorker.HostName);
         }
-        return false;
+        return string.Empty;
+    }
+
+    public void ResetJob(string hostName)
+    {
+        if(_workers.TryGetValue(hostName, out var worker))
+        {
+            worker.AssignedJobId = Guid.Empty;
+        }
     }
 }

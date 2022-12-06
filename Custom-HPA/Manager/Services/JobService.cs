@@ -21,6 +21,7 @@ public class JobService : BackgroundService
         var assignInterval = TimeSpan.FromSeconds(5);
         while (!stoppingToken.IsCancellationRequested)
         {
+            
             var currentWorkers = _workerRepository.GetCurrentWorker();
             var assignedJobs = _jobRepository.GetJobs().Where(x => x.CompletedAt.HasValue == false)
                 .Where(x => string.IsNullOrEmpty(x.AssignedWorker) == false)
@@ -34,43 +35,18 @@ public class JobService : BackgroundService
                 }
             }
             
-            var assignedWorkers = _jobRepository.GetJobs().Where(x => x.CompletedAt.HasValue == false)
-                .Where(x => string.IsNullOrEmpty(x.AssignedWorker) == false)
-                .Select(x=>x.AssignedWorker)
-                .ToList();
-            
             var unassignedJobs = _jobRepository.GetJobs()
                 .Where(x => x.CompletedAt.HasValue == false)
                 .Where(x => string.IsNullOrEmpty(x.AssignedWorker))
                 .OrderBy(x=>x.CreatedAt)
                 .ToArray();
 
-
-            foreach (var unassignedJob in unassignedJobs)
+            foreach (var job in unassignedJobs)
             {
-                
-                _logger.LogInformation("assignedWorkers: {workers}", string.Join("|",assignedWorkers));
-                _logger.LogInformation("currentWorkers: {workers}", string.Join("|",currentWorkers.Select(x=>x.HostName)));
-                
-                var unassignedWorker = currentWorkers.FirstOrDefault(cw => assignedWorkers.All(aw => aw != cw.HostName));
-                
-                _logger.LogInformation("unassignedWorker: {workers}", unassignedWorker?.HostName);
-                while (unassignedWorker != null)
+                var targetWorker = await _workerRepository.AssignJob(job.Id);
+                if (!string.IsNullOrEmpty(targetWorker))
                 {
-                    _logger.LogInformation("Try assigned worker {WorkerName}", unassignedWorker.HostName);
-                    if (await _workerRepository.AssignJob(unassignedWorker.HostName, unassignedJob.Id))
-                    {
-                        _jobRepository.Assign(unassignedJob.Id, unassignedWorker.HostName);
-                        assignedWorkers.Add(unassignedWorker.HostName);
-                        unassignedWorker = currentWorkers.FirstOrDefault(cw => assignedWorkers.All(aw => aw != cw.HostName));
-                        _logger.LogInformation("unassignedWorker: {worker}", unassignedWorker?.HostName);
-                        _logger.LogInformation("assignedWorkers: {workers}", string.Join("|",assignedWorkers));
-                        _logger.LogInformation("currentWorkers: {workers}", string.Join("|",currentWorkers.Select(x=>x.HostName)));
-                    }
-                    else
-                    {
-                        _logger.LogWarning("Assigne Job {JobId} to worker {Worker} failed", unassignedJob.Id, unassignedWorker.HostName);
-                    }
+                    _jobRepository.Assign(job.Id, targetWorker);
                 }
             }
 

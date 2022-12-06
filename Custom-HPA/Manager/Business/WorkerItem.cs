@@ -14,5 +14,7 @@ public class WorkerItem
     public IServerStreamWriter<GetCommandResponse> CommandStream { get; set; }
     
     public CancellationTokenSource CancellationTokenSource { get; set; }
-    
+
+    public Guid AssignedJobId { get; set; } = Guid.Empty;
+
 }
