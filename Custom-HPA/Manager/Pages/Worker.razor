@@ -48,7 +48,7 @@
     {
         if (!firstRender) return;
         
-        using var periodicTimer = new PeriodicTimer(TimeSpan.FromSeconds(10));
+        using var periodicTimer = new PeriodicTimer(TimeSpan.FromSeconds(2));
         while (await periodicTimer.WaitForNextTickAsync())
         {
             await RefreshWorker();
@@ -76,14 +76,14 @@
                     Name = currentWorker.HostName,
                     CreatedAt = currentWorker.CreatedAt,
                     LastHeartbeat = currentWorker.LastHeartbeat,
-                    
-                        
+                    AssignedJobId = currentWorker.AssignedJobId
                 };
                 _data.Add(item);
             }
             else
             {
                 item.LastHeartbeat = currentWorker.LastHeartbeat;
+                item.AssignedJobId = currentWorker.AssignedJobId;
             }
 
         }
