@@ -47,7 +47,7 @@ jobs:
       id: meta_worker
       uses: docker/metadata-action@v4
       with:
-         images: ${{ env.REGISTRY }}/${{ github.actor }}/${{ env.IMAGE_NAME }}
+         images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
          tags: |
            type=raw,value=hpa-worker
 
@@ -55,7 +55,7 @@ jobs:
       id: meta_manager
       uses: docker/metadata-action@v4
       with:
-         images: ${{ env.REGISTRY }}/${{ github.actor }}/${{ env.IMAGE_NAME }}
+         images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
          tags: |
            type=raw,value=hpa-manager
 
