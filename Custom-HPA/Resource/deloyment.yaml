@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: custom-hpa-manager-dep
+  namespace: custom-metrics
+spec:
+  selector:
+    matchLabels:
+      stack: custom-hpa
+      app: manager
+  template:
+    metadata:
+      labels:
+        stack: custom-hpa
+        app: manager
+    spec:
+      containers:
+      - image: ghcr.io/fpommerening/kxs-for-developers:hpa-manager
+        imagePullPolicy: Always
+        name: app
+        ports:
+        - name: http1
+          containerPort: 5001
+        - name: http2
+          containerPort: 5002
+        volumeMounts:
+        - name: cfg
+          mountPath: "/app/appsettings.Production.json"
+          subPath: manager.appsettings.json
+      volumes:
+      - name: cfg
+        configMap:
+          name: custom-hpa-cm
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: custom-hpa-worker-dep
+  namespace: custom-metrics
+spec:
+  selector:
+    matchLabels:
+      stack: custom-hpa
+      app: worker
+  template:
+    metadata:
+      labels:
+        stack: custom-hpa
+        app: worker
+    spec:
+      containers:
+      - image: ghcr.io/fpommerening/kxs-for-developers:hpa-worker
+        imagePullPolicy: Always
+        name: app
+        volumeMounts:
+        - name: cfg
+          mountPath: "/app/appsettings.Production.json"
+          subPath: worker.appsettings.json
+      volumes:
+      - name: cfg
+        configMap:
+          name: custom-hpa-cm

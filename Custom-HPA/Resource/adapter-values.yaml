@@ -1,0 +1,16 @@
+prometheus:
+  url: http://prometheus-operated.monitoring.svc
+
+rules:
+  default: false
+  custom: 
+    - seriesQuery: 'custom_worker_rate'
+      resources:
+        overrides:
+          namespace:
+            resource: namespace
+          service:
+            resource: service
+      name:
+        as: "custom_hpa_rate"
+      metricsQuery: 100 * (<<.Series>> / 2)

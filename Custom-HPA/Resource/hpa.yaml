@@ -1,0 +1,38 @@
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: custom-hpa
+  namespace: custom-metrics
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: custom-hpa-worker-dep
+  minReplicas: 1
+  maxReplicas: 9
+  metrics:
+    - type: Object
+      object:
+        metric:
+          name: custom_hpa_rate
+        describedObject:
+          apiVersion: v1
+          kind: service
+          name: custom-hpa-manager-svc
+        target:
+          type: Value
+          value: 100
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 60
+      policies:
+      - type: Pods 
+        value: 2
+        periodSeconds: 30
+    scaleUp:
+      stabilizationWindowSeconds: 15
+      policies:
+      - type: Pods 
+        value: 2
+        periodSeconds: 20
+  

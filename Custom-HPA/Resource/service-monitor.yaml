@@ -1,0 +1,16 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: custom-hpa-manager-sm
+  namespace: custom-metrics
+  labels:
+    release: prometheus-stack
+spec:
+  selector:
+    matchLabels:
+      stack: custom-hpa
+      app: manager
+  endpoints:
+  - port: http1
+    interval: 10s
+  

@@ -1,0 +1,18 @@
+nodeExporter:
+  enabled: false
+
+grafana:
+  enabled: false
+
+coreDns:
+  enabled: false
+
+
+additionalPrometheusRulesMap:
+  custom-hpa-rules:
+    groups:
+    - name: manager
+      rules:
+      - record: custom_worker_rate
+        expr:  (current_jobs  / current_worker)
+

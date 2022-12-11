@@ -1,0 +1,5 @@
+
+helm upgrade prometheus-stack --install prometheus-community/kube-prometheus-stack -f .\operator-values.yaml -n monitoring
+
+
+helm upgrade prometheus-adapter --install prometheus-community/prometheus-adapter -f .\adapter-values.yaml -n monitoring

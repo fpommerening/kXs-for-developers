@@ -1,0 +1,33 @@
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: custom-hpa-ir
+  namespace: custom-metrics
+spec:
+  entryPoints:
+  - websecure
+  routes:
+  - match: Host(`hpa-custom.demo-apps.de`)
+    kind: Rule
+    services:
+    - name: custom-hpa-manager-svc
+      port: 5001
+  tls:
+    certResolver: lets-encrypt-prod
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: prometheus-ir
+  namespace: monitoring
+spec:
+  entryPoints:
+  - websecure
+  routes:
+  - match: Host(`promtheus.demo-apps.de`)
+    kind: Rule
+    services:
+    - name: prometheus-operated
+      port: 9090
+  tls:
+    certResolver: lets-encrypt-prod
