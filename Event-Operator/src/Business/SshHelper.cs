@@ -1,29 +1,45 @@
-﻿using System.IO;
-using System.Threading.Tasks;
-using Renci.SshNet;
+﻿using Renci.SshNet;
 
-namespace FP.ContainerTraining.EventOperator.Business
+namespace FP.ContainerTraining.EventOperator.Business;
+
+public class SshHelper
 {
-    public class SshHelper
+    public static async Task<byte[]> GetRemoteFile(string host, string user, string password, string filePath)
     {
-        public static async Task<byte[]> GetRemoteFile(string host, string user, string password, string path)
+        using var sftp = new SftpClient(host, user, password);
+        sftp.Connect();
+
+        byte[] data;
+
+        await using (var memoryStream = new MemoryStream())
         {
-            using var sftp = new SftpClient(host, user, password);
-            sftp.Connect();
+            sftp.DownloadFile(filePath, memoryStream);
+            await memoryStream.FlushAsync();
 
-            byte[] data;
-
-            await using (var memoryStream = new MemoryStream())
-            {
-                sftp.DownloadFile(path, memoryStream);
-                await memoryStream.FlushAsync();
-
-                data = memoryStream.ToArray();
-            }
-
-            sftp.Disconnect();
-
-            return data;
+            data = memoryStream.ToArray();
         }
+
+        sftp.Disconnect();
+
+        return data;
+    }
+
+    public static async Task<byte[]> GetRemoteFile(string host, string user, string sshKeyPath, string sshKeyPassword,
+        string filePath)
+    {
+        using var sftp = new SftpClient(host, user, new PrivateKeyFile(sshKeyPath, sshKeyPassword));
+        sftp.Connect();
+
+        byte[] data;
+
+        await using (var memoryStream = new MemoryStream())
+        {
+            sftp.DownloadFile(filePath, memoryStream);
+            await memoryStream.FlushAsync();
+            data = memoryStream.ToArray();
+        }
+
+        sftp.Disconnect();
+        return data;
     }
 }

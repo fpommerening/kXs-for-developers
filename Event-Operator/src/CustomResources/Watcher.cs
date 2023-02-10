@@ -1,84 +1,85 @@
-﻿using System;
-using System.Threading.Tasks;
-using k8s;
-using Microsoft.Rest;
+﻿using k8s;
+using k8s.Autorest;
 
-namespace FP.ContainerTraining.EventOperator.CustomResources
+namespace FP.ContainerTraining.EventOperator.CustomResources;
+
+public class Watcher<T> where T : CustomResource
 {
-    public class Watcher<T> where T : CustomResource
+    private readonly IKubernetes _kubernetes;
+    private readonly CustomResourceDefinition<T> _crd;
+    private readonly ICustomerResourceHandler<T> _handler;
+    private k8s.Watcher<T> _innerWatcher;
+    private readonly string _namespace;
+
+    public Watcher(IKubernetes kubernetes, CustomResourceDefinition<T> crd,
+        ICustomerResourceHandler<T> handler, string @namespace)
     {
-        private readonly Kubernetes _kubernetes;
-        private readonly CustomResourceDefinition<T> _crd;
-        private readonly ICustomerResourceHandler<T> _handler;
-        private k8s.Watcher<T> _innerWatcher;
-        private string _namespace;
+        _kubernetes = kubernetes;
+        _crd = crd;
+        _handler = handler;
+        _namespace = @namespace;
+    }
 
-        public Watcher(Kubernetes kubernetes, CustomResourceDefinition<T> crd, ICustomerResourceHandler<T> handler, string @namespace)
+    public void Ensure()
+    {
+        Task<HttpOperationResponse<object>> listResponse = null;
+
+        if (_innerWatcher is { Watching: false })
         {
-            _kubernetes = kubernetes;
-            _crd = crd;
-            _handler = handler;
-            _namespace = @namespace;
+            _innerWatcher.Dispose();
+            _innerWatcher = null;
         }
 
-        public void Ensure()
+        if (_innerWatcher != null)
         {
-            Task<HttpOperationResponse<object>> listResponse = null;
-
-            if (_innerWatcher is {Watching: false})
-            {
-                _innerWatcher.Dispose();
-                _innerWatcher = null;
-            }
-
-            if (_innerWatcher != null)
-            {
-                return;
-            }
-
-            listResponse = _kubernetes.ListNamespacedCustomObjectWithHttpMessagesAsync(_crd.Group, _crd.Version, _namespace, _crd.Plural, watch: true);
-            _innerWatcher = listResponse.Watch<T, object>(OnChange, OnError, OnClose);
+            return;
         }
 
-        private void OnClose()
-        {
-        }
+        listResponse = _kubernetes.CustomObjects.ListNamespacedCustomObjectWithHttpMessagesAsync(_crd.Group, _crd.Version,
+                _namespace, _crd.Plural, watch: true);
+        _innerWatcher = listResponse.Watch<T, object>(OnChange, OnError, OnClose);
+    }
 
-        private void OnError(Exception obj)
-        {
-        }
+    private void OnClose()
+    {
+    }
 
-        private async void OnChange(WatchEventType eventType, T item)
+    private void OnError(Exception obj)
+    {
+    }
+
+    private async void OnChange(WatchEventType eventType, T item)
+    {
+        try
         {
-            try
+            switch (eventType)
             {
-                switch (eventType)
-                {
-                    case WatchEventType.Added:
-                        await _handler.OnAdded(item);
-                        break;
-                    case WatchEventType.Modified:
-                        await _handler.OnUpdated(item);
-                        break;
-                    case WatchEventType.Deleted:
-                        await _handler.OnDeleted(item);
-                        break;
-                    case WatchEventType.Bookmark:
+                case WatchEventType.Added:
+                    await _handler.OnAdded(item);
+                    break;
+                case WatchEventType.Modified:
+                    await _handler.OnUpdated(item);
+                    break;
+                case WatchEventType.Deleted:
+                    await _handler.OnDeleted(item);
+                    break;
+                case WatchEventType.Bookmark:
 
-                        break;
-                    case WatchEventType.Error:
-                        await _handler.OnError(item);
-                        break;
-                        return;
-                    default:
-                        //Log.Warn($"Don't know what to do with {type}");
-                        break;
-                };
+                    break;
+                case WatchEventType.Error:
+                    await _handler.OnError(item);
+                    break;
+                    return;
+                default:
+                    //Log.Warn($"Don't know what to do with {type}");
+                    break;
             }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error on OnChange {eventType} - {item.Metadata.Name} \n {ex}");
-            }
+
+            ;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error on OnChange {eventType} - {item.Metadata.Name} \n {ex}");
         }
     }
 }

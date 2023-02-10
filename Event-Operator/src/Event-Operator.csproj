@@ -1,14 +1,16 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
-    <RootNamespace>FP.ContainerTraining.EventOperator</RootNamespace>
+	  <TargetFramework>net6.0</TargetFramework>
+	  <Nullable>enable</Nullable>
+	  <ImplicitUsings>enable</ImplicitUsings>
+	  <RootNamespace>FP.ContainerTraining.EventOperator</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="KubernetesClient" Version="6.0.1" />
-    <PackageReference Include="Microsoft.Extensions.Hosting" Version="3.1.18" />
-    <PackageReference Include="SSH.NET" Version="2020.0.1" />
+    <PackageReference Include="MudBlazor" Version="6.1.8" />
+      <PackageReference Include="KubernetesClient" Version="10.0.27" />
+      <PackageReference Include="SSH.NET" Version="2020.0.2" />
   </ItemGroup>
 
 </Project>

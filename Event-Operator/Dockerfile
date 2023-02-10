@@ -1,11 +1,7 @@
-FROM mcr.microsoft.com/dotnet/core/sdk:3.1 AS builder
-WORKDIR /build
-COPY src /build
-RUN dotnet restore Event-Operator.csproj
-RUN dotnet publish -c release -r linux-x64 -o /app
-
-FROM mcr.microsoft.com/dotnet/core/aspnet:3.1
-WORKDIR /app
-COPY --from=builder /app .
+FROM mcr.microsoft.com/dotnet/aspnet:6.0-focal
+EXPOSE 5001/TCP
+EXPOSE 5002/TCP
+WORKDIR /app/
+COPY out ./
 
 ENTRYPOINT ["./Event-Operator"]

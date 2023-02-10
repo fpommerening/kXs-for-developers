@@ -1,14 +1,12 @@
-﻿using System.Collections.Generic;
-using System.Threading.Tasks;
+﻿using System.Text.Json;
+using System.Text.Json.Nodes;
 using FP.ContainerTraining.EventOperator.Business;
 using k8s;
-using Microsoft.Rest;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
+using k8s.Autorest;
 
-namespace FP.ContainerTraining.EventOperator.CustomResources
-{
-    public class CustomResourceDefinition<T> where T : CustomResource
+namespace FP.ContainerTraining.EventOperator.CustomResources;
+
+public class CustomResourceDefinition<T> where T : CustomResource
     {
         private Watcher<T> _watcher;
 
@@ -27,37 +25,37 @@ namespace FP.ContainerTraining.EventOperator.CustomResources
         public string Singular { get; protected set; }
         public string Kind { get; protected set; }
 
-        public async Task<T> GetObjectOrDefaultAsync(Kubernetes kubernetes, string name, string @namespace = "default")
+        public async Task<T?> GetObjectOrDefaultAsync(IKubernetes kubernetes, string name, string @namespace = "default")
         {
             try
             {
-                var result =
-                    await kubernetes.GetNamespacedCustomObjectWithHttpMessagesAsync(Group, Version, @namespace, Plural,
-                        name);
-                var js = result.Body as JObject;
-                return js?.ToObject<T>();
+                var result = await kubernetes.CustomObjects.GetNamespacedCustomObjectAsync(Group, Version, @namespace,
+                    Plural, name);
+                if (result is JsonElement resultElement)
+                {
+                    return resultElement.Deserialize<T>(KubernetesSerialization.Options);
+                }
+
+                return default;
             }
             catch (HttpOperationException hoex) when (hoex.Response.StatusCode == System.Net.HttpStatusCode.NotFound)
             {
-                return default(T);
+                return default;
             }
         }
 
-        public async Task<IReadOnlyList<T>> GetObjectsAsync(Kubernetes kubernetes, string @namespace = "default")
+        public async Task<IReadOnlyList<T>> GetObjectsAsync(IKubernetes kubernetes, string @namespace = "default")
         {
-            var result =
-                await kubernetes.ListNamespacedCustomObjectWithHttpMessagesAsync(Group, Version, @namespace, Plural);
-            var js = result.Body as JObject;
-            var array = js?.GetValue("items") as JArray;
-            if (array == null)
+            var result = await kubernetes.CustomObjects.ListNamespacedCustomObjectAsync(Group, Version, @namespace, Plural);
+            if (result is JsonElement root && root.TryGetProperty("items", out var itemsProperty))
             {
-                return new T[] { };
+                return itemsProperty.Deserialize<T[]>(KubernetesSerialization.Options) ?? Array.Empty<T>();
             }
 
-            return array.ToObject<List<T>>().AsReadOnly();
+            return Array.Empty<T>();
         }
 
-        public async Task CreateObject(Kubernetes kubernetes, T obj, string @namespace = "default")
+        public async Task CreateObject(ICustomObjectsOperations customObjectsOperations, T obj, string @namespace = "default")
         {
             if (string.IsNullOrEmpty(obj.Kind))
             {
@@ -69,13 +67,11 @@ namespace FP.ContainerTraining.EventOperator.CustomResources
                 obj.ApiVersion = $"{Group}/{Version}";
             }
 
-            var js = JObject.FromObject(obj, JsonSerializer.Create(KubernetesSerialization.SerializerSettings));
-
-            await kubernetes.CreateNamespacedCustomObjectWithHttpMessagesAsync(js, Group, Version, @namespace, Plural);
-            
+            var js = JsonSerializer.Serialize(obj, KubernetesSerialization.Options);
+            await customObjectsOperations.CreateNamespacedCustomObjectAsync(js, Group, Version, @namespace, Plural);
         }
 
-        public void Watch(Kubernetes kubernetes, ICustomerResourceHandler<T> handler, string @namespace = "default")
+        public void Watch(IKubernetes kubernetes, ICustomerResourceHandler<T> handler, string @namespace = "default")
         {
             if (_watcher == null)
             {
@@ -85,6 +81,3 @@ namespace FP.ContainerTraining.EventOperator.CustomResources
             _watcher.Ensure();
         }
     }
-
-
-}

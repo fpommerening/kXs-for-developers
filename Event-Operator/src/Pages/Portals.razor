@@ -1,0 +1,99 @@
+﻿@page "/"
+@page "/portals"
+@using FP.ContainerTraining.EventOperator.CustomResources
+@using k8s
+
+@inject CustomResourceDefinition<EventPortal> CrdEventPortal
+@inject IKubernetes Kubernetes;
+@inject IConfiguration Configuration;
+
+<MudGrid>
+    
+    <MudItem xs="12">
+    <MudTable Items="SortedData" Hover="true" Striped="true" Bordered="true" Breakpoint="Breakpoint.Sm">
+                <HeaderContent>
+                    <MudTh>Name</MudTh>
+                    <MudTh>Namespace</MudTh>
+                    <MudTh>Server</MudTh>
+                    <MudTh>Erstellt am</MudTh>
+                    <MudTh></MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="Name">@context.Name</MudTd>
+                    <MudTd DataLabel="Namespace">@context.Namespace</MudTd>
+                    <MudTd DataLabel="Server">@context.Server</MudTd>
+                    <MudTd DataLabel="BaseUrl">@context.BaseUrl</MudTd>
+                    <MudTd DataLabel="CreationTimestamp">@context.CreationTimestamp</MudTd>
+                    <MudTd> <MudIconButton
+                                Icon="@Icons.Material.Filled.Edit"
+                                Href="@($"portal/{context.Name}")">Öffnen</MudIconButton></MudTd>
+                </RowTemplate>
+            </MudTable>
+        
+    </MudItem>
+
+</MudGrid>
+@code {
+    
+    private List<EventPortalViewModel> _data = new();
+    
+    private IEnumerable<EventPortalViewModel> SortedData
+    {
+        get { return _data.OrderBy(x => x.Name); }
+    }
+    
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+        
+        await RefreshEventPortals();
+        
+        using var periodicTimer = new PeriodicTimer(TimeSpan.FromSeconds(10));
+        while (await periodicTimer.WaitForNextTickAsync())
+        {
+            await RefreshEventPortals();
+        }
+    }
+    
+    private async Task RefreshEventPortals()
+    {
+        
+        var portals = await CrdEventPortal.GetObjectsAsync(Kubernetes, Configuration["PortalNamespace"]);
+        foreach (var portal in portals)
+        {
+            var vm = _data.FirstOrDefault(x => x.Name == portal.Metadata.Name);
+            if (vm == null)
+            {
+                vm = new EventPortalViewModel
+                {
+                    Name = portal.Metadata.Name,
+                };
+                _data.Add(vm);
+            }
+            vm.CreationTimestamp = portal.Metadata.CreationTimestamp;
+            vm.BaseUrl = portal.Spec.BaseUrl;
+            vm.Namespace = portal.Spec.Namespace;
+            vm.Server = portal.Spec.Server;
+        }
+        _data.RemoveAll(x => portals.All(p => p.Metadata.Name != x.Name));
+        await InvokeAsync(StateHasChanged);
+    }
+
+    
+
+    public class EventPortalViewModel
+    {
+        public string Name { get; set; }
+
+        public string Namespace { get; set; }
+
+        public string Server { get; set; }
+
+        public string BaseUrl { get; set; }
+
+        public DateTime? CreationTimestamp { get; set; }
+    }
+    
+    
+    
+}

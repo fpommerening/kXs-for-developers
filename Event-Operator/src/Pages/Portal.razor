@@ -1,0 +1,232 @@
+﻿@page "/portal/{name}"
+@using FP.ContainerTraining.EventOperator.CustomResources
+@using k8s
+@using k8s.Models
+
+@inject CustomResourceDefinition<EventPortal> CrdEventPortal
+@inject CustomResourceDefinition<IngressRoute> CrdIngressRoute
+@inject IKubernetes Kubernetes;
+@inject IConfiguration Configuration;
+
+@if (Model == null)
+{
+    return;
+}
+
+
+<MudGrid>
+    <MudItem xs="4">
+        <MudTextField @bind-Value="Model.Name" Label="Name" ReadOnly="true"></MudTextField>
+    </MudItem>
+    <MudItem xs="4">
+        <MudTextField @bind-Value="Model.Namespace" Label="Namespace" ReadOnly="true"></MudTextField>
+    </MudItem>
+    <MudItem xs="4">
+        <MudTextField @bind-Value="Model.BaseUrl" Label="BaseUrl" ReadOnly="true"></MudTextField>
+    </MudItem>
+        <MudItem xs="4">
+            <MudTextField @bind-Value="Model.Server" Label="Server" ReadOnly="true"></MudTextField>
+        </MudItem>
+        <MudItem xs="4">
+            <MudTextField @bind-Value="Model.SshUser" Label="SshUser" ReadOnly="true"></MudTextField>
+        </MudItem>
+    <MudItem xs="4">
+        <MudTextField @bind-Value="Model.SshPassword" Label="SshPassword" ReadOnly="true"></MudTextField>
+    </MudItem>
+    
+    <MudItem xs="12">
+    
+    <MudTable Items="Model.ObjectsInNamespace" Hover="true" Striped="true" Bordered="true" Breakpoint="Breakpoint.Sm">
+        <HeaderContent>
+            <MudTh>Kind</MudTh>
+            <MudTh>API-Version</MudTh>
+            <MudTh>Name</MudTh>
+            <MudTh>Erstellt am</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Kind">@context.Kind</MudTd>
+            <MudTd DataLabel="ApiVersion">@context.ApiVersion</MudTd>
+            <MudTd DataLabel="Name">@context.Name</MudTd>
+            <MudTd DataLabel="CreationTimestamp">@context.CreationTimestamp</MudTd>
+        </RowTemplate>
+    </MudTable>
+    </MudItem>
+</MudGrid>
+
+@code {
+    
+    [Parameter]
+    public string Name { get; set; }
+    
+    private EventPortalViewModel? Model { get; set; }
+    
+
+    protected override async Task OnParametersSetAsync()
+    {
+        
+        if (Model == null)
+        {
+            Model = new EventPortalViewModel();
+        }
+
+        if (Model.Name == Name)
+        {
+            return;
+        }
+        Model.Name = Name;
+        if (!string.IsNullOrEmpty(Name))
+        {
+            await RefreshEventPortal();    
+        }
+    }
+    
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+        
+        await RefreshEventPortal();
+        
+        using var periodicTimer = new PeriodicTimer(TimeSpan.FromSeconds(10));
+        while (await periodicTimer.WaitForNextTickAsync())
+        {
+            await RefreshEventPortal();
+        }
+    }
+
+    private async Task RefreshEventPortal()
+    {
+        if (string.IsNullOrEmpty(Name) || Model == null)
+        {
+            return;
+        }
+        var eventPortal = await CrdEventPortal.GetObjectOrDefaultAsync(Kubernetes, Name, Configuration["PortalNamespace"]);
+        if (eventPortal is null)
+        {
+            return;
+        }
+        var @namespace = eventPortal.Spec.Namespace;
+
+        var pods = await Kubernetes.CoreV1.ListNamespacedPodAsync(@namespace);
+        var deployments = await Kubernetes.AppsV1.ListNamespacedDeploymentAsync(@namespace);
+        var services = await Kubernetes.CoreV1.ListNamespacedServiceAsync(@namespace);
+        var ingressroutes = await CrdIngressRoute.GetObjectsAsync(Kubernetes, @namespace);
+
+        Model.CreationTimestamp = eventPortal.Metadata.CreationTimestamp;
+        Model.BaseUrl = eventPortal.Spec.BaseUrl;
+        Model.Namespace = eventPortal.Spec.Namespace;
+        Model.Server = eventPortal.Spec.Server;
+        Model.SshUser = eventPortal.Spec.SshUser;
+        Model.SshPassword = eventPortal.Spec.SshPassword;
+        Model.PortalPassword = eventPortal.Spec.PortalPassword;
+        Model.CodeServer = MapEventPortalApp(eventPortal.Spec.CodeServer);
+        Model.ShellInABox = MapEventPortalApp(eventPortal.Spec.ShellInABox);
+
+        Model.ObjectsInNamespace.AddRange(pods.Items.Select(MapKubernetesObject));
+        Model.ObjectsInNamespace.AddRange(deployments.Items.Select(MapKubernetesObject));
+        Model.ObjectsInNamespace.AddRange(services.Items.Select(MapKubernetesObject));
+        Model.ObjectsInNamespace.AddRange(ingressroutes.Select(MapKubernetesObject));
+
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private EventPortalAppViewModel MapEventPortalApp(EventPortalApplicationSpec app)
+    {
+        return new EventPortalAppViewModel
+        {
+            Image = app.Image,
+            Port = app.Port,
+            Prefix = app.Prefix
+        };
+    }
+    
+    private KubernetesMetaViewModel MapKubernetesObject(V1Pod pod)
+    {
+        return new KubernetesMetaViewModel
+        {
+            ApiVersion = "v1", // deployment.ApiVersion
+            Kind = "Pod", // deployment.Kind,
+            CreationTimestamp = pod.Metadata.CreationTimestamp,
+            Name = pod.Metadata.Name
+        };
+    }
+
+    private KubernetesMetaViewModel MapKubernetesObject(V1Deployment deployment)
+    {
+        return new KubernetesMetaViewModel
+        {
+            ApiVersion = "apps/v1", // deployment.ApiVersion
+            Kind = "Deployment", // deployment.Kind,
+            CreationTimestamp = deployment.Metadata.CreationTimestamp,
+            Name = deployment.Metadata.Name
+        };
+    }
+
+    private KubernetesMetaViewModel MapKubernetesObject(V1Service service)
+    {
+        return new KubernetesMetaViewModel
+        {
+            ApiVersion = "v1", // deployment.ApiVersion
+            Kind = "Service", // deployment.Kind,
+            CreationTimestamp = service.Metadata.CreationTimestamp,
+            Name = service.Metadata.Name
+        };
+    }
+
+    private KubernetesMetaViewModel MapKubernetesObject(IngressRoute ingressRoute)
+    {
+        return new KubernetesMetaViewModel
+        {
+            ApiVersion = ingressRoute.ApiVersion,
+            Kind = ingressRoute.Kind,
+            CreationTimestamp = ingressRoute.Metadata.CreationTimestamp,
+            Name = ingressRoute.Metadata.Name
+        };
+    }
+
+
+    public class EventPortalViewModel
+    {
+        public string Name { get; set; }
+
+        public string Namespace { get; set; }
+
+        public string Server { get; set; }
+
+        public string BaseUrl { get; set; }
+
+        public DateTime? CreationTimestamp { get; set; }
+        
+        public string SshUser { get; set; }
+
+        public string SshPassword { get; set; }
+
+        public string PortalPassword { get; set; }
+
+        public EventPortalAppViewModel ShellInABox { get; set; }
+
+        public EventPortalAppViewModel CodeServer { get; set; }
+
+        public List<KubernetesMetaViewModel> ObjectsInNamespace { get; } = new List<KubernetesMetaViewModel>();
+    }
+
+    public class EventPortalAppViewModel
+    {
+        public string Prefix { get; set; }
+
+        public string Image { get; set; }
+
+        public int Port { get; set; }
+    }
+
+    public class KubernetesMetaViewModel
+    {
+        public string Name { get; set; }
+
+        public string ApiVersion { get; set; }
+
+        public string Kind { get; set; }
+
+        public DateTime? CreationTimestamp { get; set; }
+       
+    }
+}

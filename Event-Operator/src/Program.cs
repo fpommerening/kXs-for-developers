@@ -1,20 +1,47 @@
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Hosting;
+using FP.ContainerTraining.EventOperator.CustomResources;
+using FP.ContainerTraining.EventOperator.Services;
+using k8s;
+using Microsoft.AspNetCore.Hosting.StaticWebAssets;
+using MudBlazor.Services;
 
-namespace FP.ContainerTraining.EventOperator
+var builder = WebApplication.CreateBuilder(args);
+
+StaticWebAssetsLoader.UseStaticWebAssets(builder.Environment, builder.Configuration);
+
+// Add services to the container.
+builder.Services.AddRazorPages();
+builder.Services.AddServerSideBlazor();
+builder.Services.AddMudServices();
+
+builder.Services.AddSingleton<IKubernetes, Kubernetes>(_ =>
 {
-    public class Program
-    {
-        public static void Main(string[] args)
-        {
-            CreateHostBuilder(args).Build().Run();
-        }
+    var config = KubernetesClientConfiguration.IsInCluster()
+        ? KubernetesClientConfiguration.InClusterConfig()
+        : KubernetesClientConfiguration.BuildConfigFromConfigFile();
+    return new Kubernetes(config);
+});
 
-        public static IHostBuilder CreateHostBuilder(string[] args) =>
-            Host.CreateDefaultBuilder(args)
-                .ConfigureWebHostDefaults(webBuilder =>
-                {
-                    webBuilder.UseStartup<Startup>();
-                });
-    }
+builder.Services.AddCustomResources();
+builder.Services.AddCustomResourceHandler();
+builder.Services.AddHostedService<EventPortalService>();
+
+
+var app = builder.Build();
+
+// Configure the HTTP request pipeline.
+if (!app.Environment.IsDevelopment())
+{
+    app.UseExceptionHandler("/Error");
+    app.UseHsts();
 }
+
+app.UseHttpsRedirection();
+
+app.UseStaticFiles();
+
+app.UseRouting();
+
+app.MapBlazorHub();
+app.MapFallbackToPage("/_Host");
+
+app.Run();

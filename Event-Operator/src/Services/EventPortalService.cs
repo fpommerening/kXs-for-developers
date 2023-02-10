@@ -1,37 +1,31 @@
-﻿using System.Threading;
-using System.Threading.Tasks;
-using FP.ContainerTraining.EventOperator.CustomResources;
+﻿using FP.ContainerTraining.EventOperator.CustomResources;
 using k8s;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Hosting;
 
-namespace FP.ContainerTraining.EventOperator.Services
+namespace FP.ContainerTraining.EventOperator.Services;
+
+public class EventPortalService : BackgroundService
 {
-    public class EventPortalService : BackgroundService
+    private readonly IKubernetes _kubernetes;
+    private readonly CustomResourceDefinition<EventPortal> _crd;
+    private readonly EventPortalHandler _handler;
+    private readonly IConfiguration _configuration;
+
+    public EventPortalService(IKubernetes kubernetes, CustomResourceDefinition<EventPortal> crd, EventPortalHandler handler, IConfiguration configuration)
     {
-        private readonly IConfiguration _configuration;
-        private readonly Kubernetes _client;
-        private readonly CustomResourceDefinition<EventPortal> _crd;
-        private readonly EventPortalHandler _handler;
-
-        public EventPortalService(Kubernetes client, CustomResourceDefinition<EventPortal> crd, EventPortalHandler handler, IConfiguration configuration)
+        _kubernetes = kubernetes;
+        _crd = crd;
+        _handler = handler;
+        _configuration = configuration;
+    }
+    
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    {
+        var portalNamespace = _configuration["PortalNamespace"]!;
+        while (!stoppingToken.IsCancellationRequested)
         {
-            _client = client;
-            _crd = crd;
-            _handler = handler;
-            _configuration = configuration;
-        }
-
-        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
-        {
-            while (!stoppingToken.IsCancellationRequested)
-            {
-                _crd.Watch(_client, _handler, _configuration["PortalNamespace"]);
-
-                await _handler.CheckCurrentState(_crd, _configuration["PortalNamespace"]);
-
-                await Task.Delay(60000, stoppingToken);
-            }
+            _crd.Watch(_kubernetes, _handler, portalNamespace);
+            await _handler.CheckCurrentState(_crd, portalNamespace);
+            await Task.Delay(60000, stoppingToken);
         }
     }
 }
