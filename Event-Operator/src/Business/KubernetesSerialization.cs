@@ -7,13 +7,4 @@ public class KubernetesSerialization
     {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase
     };
-
-    // ContractResolver = new CamelCasePropertyNamesContractResolver()
-    // {
-    //     NamingStrategy = new CamelCaseNamingStrategy
-    //     {
-    //         ProcessDictionaryKeys = false
-    //     }
-    // }
-
 }

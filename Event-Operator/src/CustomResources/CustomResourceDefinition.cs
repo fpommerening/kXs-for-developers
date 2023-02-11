@@ -1,5 +1,4 @@
 ﻿using System.Text.Json;
-using System.Text.Json.Nodes;
 using FP.ContainerTraining.EventOperator.Business;
 using k8s;
 using k8s.Autorest;
@@ -8,7 +7,7 @@ namespace FP.ContainerTraining.EventOperator.CustomResources;
 
 public class CustomResourceDefinition<T> where T : CustomResource
     {
-        private Watcher<T> _watcher;
+        private Watcher<T>? _watcher;
 
         public CustomResourceDefinition(string group, string version, string plural, string singular, string kind)
         {
@@ -67,17 +66,12 @@ public class CustomResourceDefinition<T> where T : CustomResource
                 obj.ApiVersion = $"{Group}/{Version}";
             }
 
-            var js = JsonSerializer.Serialize(obj, KubernetesSerialization.Options);
-            await customObjectsOperations.CreateNamespacedCustomObjectAsync(js, Group, Version, @namespace, Plural);
+            await customObjectsOperations.CreateNamespacedCustomObjectAsync(obj, Group, Version, @namespace, Plural);
         }
 
         public void Watch(IKubernetes kubernetes, ICustomerResourceHandler<T> handler, string @namespace = "default")
         {
-            if (_watcher == null)
-            {
-                _watcher = new Watcher<T>(kubernetes, this, handler, @namespace);
-            }
-
+            _watcher ??= new Watcher<T>(kubernetes, this, handler, @namespace);
             _watcher.Ensure();
         }
     }

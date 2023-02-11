@@ -196,7 +196,7 @@ public class KubernetesHelper
 
     public static async Task CreateIngressRoute(IKubernetes kubernetes, string name, string @namespace,
         Dictionary<string, string> labels, CustomResourceDefinition<IngressRoute> crd, string entryPoint,
-        string match, int priority, Dictionary<string, int> services, string certResolver = "")
+        string match, int priority, Dictionary<string, int> services, string ingressClass = "", string certResolver = "")
     {
         var existingRoutes = await crd.GetObjectsAsync(kubernetes, @namespace);
         if (existingRoutes.Any(x => Match(x.Metadata, name, labels)))
@@ -204,12 +204,20 @@ public class KubernetesHelper
             return;
         }
 
+        var annotations = new Dictionary<string, string>();
+        if (!string.IsNullOrEmpty(ingressClass))
+        {
+            annotations.Add("kubernetes.io/ingress.class", ingressClass);
+        }
+        
         var route = new IngressRoute
         {
             Metadata = new V1ObjectMeta
             {
                 Name = name,
-                Labels = labels
+                Labels = labels,
+                Annotations = annotations
+                
             },
             Spec = new IngressRouteSpec
             {

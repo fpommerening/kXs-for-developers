@@ -117,13 +117,13 @@ public class EventPortalHandler : ICustomerResourceHandler<EventPortal>
 
             await KubernetesHelper.CreateIngressRoute(_kubernetes, codeServerRoute, @namespace, DefaultLabel,
                 _crdIngressRoute, "websecure", $"Host(`{codeServerApp.Prefix}.{baseUrl}`)", 10,
-                new Dictionary<string, int> { { codeServerClusterIp, 80 } }, "lets-encrypt-prod");
+                new Dictionary<string, int> { { codeServerClusterIp, 80 } }, "traefik-external", "lets-encrypt-prod");
             await KubernetesHelper.CreateIngressRoute(_kubernetes, shellInABoxRoute, @namespace, DefaultLabel,
                 _crdIngressRoute, "websecure", $"Host(`{shellInABoxApp.Prefix}.{baseUrl}`)", 10,
-                new Dictionary<string, int> { { shellInABoxClusterIp, 80 } }, "lets-encrypt-prod");
+                new Dictionary<string, int> { { shellInABoxClusterIp, 80 } }, "traefik-external","lets-encrypt-prod");
             await KubernetesHelper.CreateIngressRoute(_kubernetes, otherRoute, @namespace, DefaultLabel,
                 _crdIngressRoute, "web", "HostRegexp(`{subsubdomain:[a-z\\.]*}{subdomain:[a-z]+}." + baseUrl + "`)", 5,
-                new Dictionary<string, int> { { nginxProxyClusterIp, 80 } });
+                new Dictionary<string, int> { { nginxProxyClusterIp, 80 } },"traefik-external");
         }
         catch (Exception e)
         {
