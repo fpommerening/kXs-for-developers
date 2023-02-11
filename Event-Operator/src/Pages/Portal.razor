@@ -110,7 +110,7 @@
         var deployments = await Kubernetes.AppsV1.ListNamespacedDeploymentAsync(@namespace);
         var services = await Kubernetes.CoreV1.ListNamespacedServiceAsync(@namespace);
         var ingressroutes = await CrdIngressRoute.GetObjectsAsync(Kubernetes, @namespace);
-
+        
         Model.CreationTimestamp = eventPortal.Metadata.CreationTimestamp;
         Model.BaseUrl = eventPortal.Spec.BaseUrl;
         Model.Namespace = eventPortal.Spec.Namespace;
@@ -121,10 +121,31 @@
         Model.CodeServer = MapEventPortalApp(eventPortal.Spec.CodeServer);
         Model.ShellInABox = MapEventPortalApp(eventPortal.Spec.ShellInABox);
 
-        Model.ObjectsInNamespace.AddRange(pods.Items.Select(MapKubernetesObject));
-        Model.ObjectsInNamespace.AddRange(deployments.Items.Select(MapKubernetesObject));
-        Model.ObjectsInNamespace.AddRange(services.Items.Select(MapKubernetesObject));
-        Model.ObjectsInNamespace.AddRange(ingressroutes.Select(MapKubernetesObject));
+        foreach (var pod in pods.Items)
+        {
+            Model.AddObjectIfNotExists(pod, "v1", "Pod");
+        }
+        foreach (var deployment in deployments.Items)
+        {
+            Model.AddObjectIfNotExists(deployment, "apps/v1", "Deployment");
+        }
+        
+        foreach (var service in services.Items)
+        {
+            Model.AddObjectIfNotExists(service, "v1", "Service");
+        }
+        
+        foreach (var ingressroute in ingressroutes)
+        {
+            Model.AddObjectIfNotExists(ingressroute);
+        }
+        
+        var uids = new List<string>();
+        uids.AddRange(pods.Items.Select(x => x.Metadata.Uid));
+        uids.AddRange(deployments.Items.Select(x => x.Metadata.Uid));
+        uids.AddRange(services.Items.Select(x => x.Metadata.Uid));
+        uids.AddRange(ingressroutes.Select(x => x.Metadata.Uid));
+        Model.ObjectsInNamespace.RemoveAll(o => !uids.Contains(o.Uid));
 
         await InvokeAsync(StateHasChanged);
     }
@@ -136,50 +157,6 @@
             Image = app.Image,
             Port = app.Port,
             Prefix = app.Prefix
-        };
-    }
-    
-    private KubernetesMetaViewModel MapKubernetesObject(V1Pod pod)
-    {
-        return new KubernetesMetaViewModel
-        {
-            ApiVersion = "v1", // deployment.ApiVersion
-            Kind = "Pod", // deployment.Kind,
-            CreationTimestamp = pod.Metadata.CreationTimestamp,
-            Name = pod.Metadata.Name
-        };
-    }
-
-    private KubernetesMetaViewModel MapKubernetesObject(V1Deployment deployment)
-    {
-        return new KubernetesMetaViewModel
-        {
-            ApiVersion = "apps/v1", // deployment.ApiVersion
-            Kind = "Deployment", // deployment.Kind,
-            CreationTimestamp = deployment.Metadata.CreationTimestamp,
-            Name = deployment.Metadata.Name
-        };
-    }
-
-    private KubernetesMetaViewModel MapKubernetesObject(V1Service service)
-    {
-        return new KubernetesMetaViewModel
-        {
-            ApiVersion = "v1", // deployment.ApiVersion
-            Kind = "Service", // deployment.Kind,
-            CreationTimestamp = service.Metadata.CreationTimestamp,
-            Name = service.Metadata.Name
-        };
-    }
-
-    private KubernetesMetaViewModel MapKubernetesObject(IngressRoute ingressRoute)
-    {
-        return new KubernetesMetaViewModel
-        {
-            ApiVersion = ingressRoute.ApiVersion,
-            Kind = ingressRoute.Kind,
-            CreationTimestamp = ingressRoute.Metadata.CreationTimestamp,
-            Name = ingressRoute.Metadata.Name
         };
     }
 
@@ -207,6 +184,25 @@
         public EventPortalAppViewModel CodeServer { get; set; }
 
         public List<KubernetesMetaViewModel> ObjectsInNamespace { get; } = new List<KubernetesMetaViewModel>();
+
+        public void AddObjectIfNotExists(IKubernetesObject<V1ObjectMeta> objWithMeta, string apiVersion = "", string kind = "")
+        {
+            if (ObjectsInNamespace.Any(x => x.Uid == objWithMeta.Metadata.Uid))
+            {
+                return;
+            }
+            
+            var vm =  new KubernetesMetaViewModel
+            {
+                Uid = objWithMeta.Metadata.Uid,
+                Name = objWithMeta.Metadata.Name,
+                CreationTimestamp = objWithMeta.Metadata.CreationTimestamp,
+                ApiVersion = string.IsNullOrEmpty(apiVersion) ? objWithMeta.ApiVersion : apiVersion,
+                Kind = string.IsNullOrEmpty(kind) ? objWithMeta.Kind : kind
+            };
+
+            ObjectsInNamespace.Add(vm);
+        }
     }
 
     public class EventPortalAppViewModel
@@ -220,6 +216,8 @@
 
     public class KubernetesMetaViewModel
     {
+        public string Uid { get; set; }
+        
         public string Name { get; set; }
 
         public string ApiVersion { get; set; }
