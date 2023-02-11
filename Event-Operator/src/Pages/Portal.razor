@@ -13,45 +13,67 @@
     return;
 }
 
-
 <MudGrid>
-    <MudItem xs="4">
-        <MudTextField @bind-Value="Model.Name" Label="Name" ReadOnly="true"></MudTextField>
-    </MudItem>
-    <MudItem xs="4">
-        <MudTextField @bind-Value="Model.Namespace" Label="Namespace" ReadOnly="true"></MudTextField>
-    </MudItem>
-    <MudItem xs="4">
-        <MudTextField @bind-Value="Model.BaseUrl" Label="BaseUrl" ReadOnly="true"></MudTextField>
-    </MudItem>
-        <MudItem xs="4">
-            <MudTextField @bind-Value="Model.Server" Label="Server" ReadOnly="true"></MudTextField>
-        </MudItem>
-        <MudItem xs="4">
-            <MudTextField @bind-Value="Model.SshUser" Label="SshUser" ReadOnly="true"></MudTextField>
-        </MudItem>
-    <MudItem xs="4">
-        <MudTextField @bind-Value="Model.SshPassword" Label="SshPassword" ReadOnly="true"></MudTextField>
+    <MudItem xs="12">
+        <MudTabs Outlined="true" Position="Position.Top" Rounded="true" Border="true"
+            ApplyEffectsToContainer="true" Class="mt-8" PanelClass="pa-6">
+            <MudTabPanel Text="Überblick">
+                <MudStack>
+                    <MudTextField @bind-Value="Model.Name" Label="Name" ReadOnly="true"/>
+                    <MudTextField @bind-Value="Model.Namespace" Label="Namespace" ReadOnly="true"/>
+                    <MudTextField @bind-Value="Model.BaseUrl" Label="BaseUrl" ReadOnly="true"/>
+                    <MudTextField @bind-Value="Model.PortalPassword" Label="PortalPassword" ReadOnly="true"/>
+                </MudStack>
+
+            </MudTabPanel>
+            <MudTabPanel Text="Server">
+                <MudStack>
+                    <MudTextField @bind-Value="Model.Server" Label="Server" ReadOnly="true"/>
+                    <MudTextField @bind-Value="Model.SshUser" Label="SshUser" ReadOnly="true"/>
+                    @if (!string.IsNullOrEmpty(Model.SshPassword))
+                    {
+                        <MudTextField @bind-Value="Model.SshPassword" Label="SshPassword" ReadOnly="true"/>    
+                    }
+                </MudStack>
+            </MudTabPanel>
+            <MudTabPanel Text="Code-Server">
+                <MudStack>
+                    <MudTextField @bind-Value="Model.CodeServer.Image" Label="Image" ReadOnly="true"/>
+                    <MudTextField @bind-Value="Model.CodeServer.Port" Label="Port" ReadOnly="true"/>
+                    <MudTextField @bind-Value="Model.CodeServer.Prefix" Label="Prefix" ReadOnly="true"/>
+                    <MudButton FullWidth="false" Variant="Variant.Outlined" Color="Color.Primary" OnClick="async () => await RestartCodeServer()">Neustarten</MudButton>
+                </MudStack>
+            </MudTabPanel>
+            <MudTabPanel Text="Console">
+                <MudStack>
+                    <MudTextField @bind-Value="Model.ShellInABox.Image" Label="Image" ReadOnly="true"/>
+                    <MudTextField @bind-Value="Model.ShellInABox.Port" Label="Port" ReadOnly="true"/>
+                    <MudTextField @bind-Value="Model.ShellInABox.Prefix" Label="Prefix" ReadOnly="true"/>
+                    <MudButton FullWidth="false" Variant="Variant.Outlined" Color="Color.Primary" OnClick="async () => await RestartConsole()">Neustarten</MudButton>
+                </MudStack>
+            </MudTabPanel>
+        </MudTabs>
     </MudItem>
     
     <MudItem xs="12">
-    
-    <MudTable Items="Model.ObjectsInNamespace" Hover="true" Striped="true" Bordered="true" Breakpoint="Breakpoint.Sm">
-        <HeaderContent>
-            <MudTh>Kind</MudTh>
-            <MudTh>API-Version</MudTh>
-            <MudTh>Name</MudTh>
-            <MudTh>Erstellt am</MudTh>
-        </HeaderContent>
-        <RowTemplate>
-            <MudTd DataLabel="Kind">@context.Kind</MudTd>
-            <MudTd DataLabel="ApiVersion">@context.ApiVersion</MudTd>
-            <MudTd DataLabel="Name">@context.Name</MudTd>
-            <MudTd DataLabel="CreationTimestamp">@context.CreationTimestamp</MudTd>
-        </RowTemplate>
-    </MudTable>
+        <MudTable Items="Model.SortedObjectsInNamespace" Hover="true" Striped="true" Bordered="true" Breakpoint="Breakpoint.Sm">
+            <HeaderContent>
+                <MudTh>Kind</MudTh>
+                <MudTh>API-Version</MudTh>
+                <MudTh>Name</MudTh>
+                <MudTh>Erstellt am</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Kind">@context.Kind</MudTd>
+                <MudTd DataLabel="ApiVersion">@context.ApiVersion</MudTd>
+                <MudTd DataLabel="Name">@context.Name</MudTd>
+                <MudTd DataLabel="CreationTimestamp">@context.CreationTimestamp</MudTd>
+            </RowTemplate>
+        </MudTable>
+
     </MudItem>
 </MudGrid>
+
 
 @code {
     
@@ -111,7 +133,6 @@
         var services = await Kubernetes.CoreV1.ListNamespacedServiceAsync(@namespace);
         var ingressroutes = await CrdIngressRoute.GetObjectsAsync(Kubernetes, @namespace);
         
-        Model.CreationTimestamp = eventPortal.Metadata.CreationTimestamp;
         Model.BaseUrl = eventPortal.Spec.BaseUrl;
         Model.Namespace = eventPortal.Spec.Namespace;
         Model.Server = eventPortal.Spec.Server;
@@ -160,30 +181,65 @@
         };
     }
 
+    private async Task RestartCodeServer()
+    {
+        if (Model == null || string.IsNullOrEmpty(Model.Namespace))
+        {
+            return;
+        }
+        var pods = await Kubernetes.CoreV1.ListNamespacedPodAsync(Model.Namespace);
+        var pod = pods.Items.FirstOrDefault(x => x.Metadata.Name.StartsWith("code-server-deployment"));
+        if (pod is null)
+        {
+            return;
+        }
+        await Kubernetes.CoreV1.DeleteNamespacedPodAsync(pod.Metadata.Name, pod.Metadata.NamespaceProperty);
+        Model.ObjectsInNamespace.RemoveAll(x => x.Uid == pod.Metadata.Uid);
+    }
+    
+    private async Task RestartConsole()
+    {
+        if (Model == null || string.IsNullOrEmpty(Model.Namespace))
+        {
+            return;
+        }
+        var pods = await Kubernetes.CoreV1.ListNamespacedPodAsync(Model.Namespace);
+        var pod = pods.Items.FirstOrDefault(x => x.Metadata.Name.StartsWith("shell-in-a-box-deployment"));
+        if (pod is null)
+        {
+            return;
+        }
+        await Kubernetes.CoreV1.DeleteNamespacedPodAsync(pod.Metadata.Name, pod.Metadata.NamespaceProperty);
+        Model.ObjectsInNamespace.RemoveAll(x => x.Uid == pod.Metadata.Uid);
+    }
+
 
     public class EventPortalViewModel
     {
-        public string Name { get; set; }
+        public string Name { get; set; } = string.Empty;
 
-        public string Namespace { get; set; }
+        public string Namespace { get; set; } = string.Empty;
 
-        public string Server { get; set; }
+        public string Server { get; set; } = string.Empty;
 
-        public string BaseUrl { get; set; }
-
-        public DateTime? CreationTimestamp { get; set; }
+        public string BaseUrl { get; set; } = string.Empty;
         
-        public string SshUser { get; set; }
+        public string SshUser { get; set; } = string.Empty;
 
-        public string SshPassword { get; set; }
+        public string SshPassword { get; set; } = string.Empty;
 
-        public string PortalPassword { get; set; }
+        public string PortalPassword { get; set; } = string.Empty;
 
-        public EventPortalAppViewModel ShellInABox { get; set; }
+        public EventPortalAppViewModel? ShellInABox { get; set; }
 
-        public EventPortalAppViewModel CodeServer { get; set; }
+        public EventPortalAppViewModel? CodeServer { get; set; }
 
         public List<KubernetesMetaViewModel> ObjectsInNamespace { get; } = new List<KubernetesMetaViewModel>();
+        
+        public IEnumerable<KubernetesMetaViewModel> SortedObjectsInNamespace
+        {
+            get { return ObjectsInNamespace.OrderBy(x => x.ApiVersion.Length).ThenBy(x=>x.Kind).ThenBy(x=>x.Name); }
+        } 
 
         public void AddObjectIfNotExists(IKubernetesObject<V1ObjectMeta> objWithMeta, string apiVersion = "", string kind = "")
         {
@@ -207,24 +263,24 @@
 
     public class EventPortalAppViewModel
     {
-        public string Prefix { get; set; }
+        public string Prefix { get; set; } = string.Empty;
 
-        public string Image { get; set; }
+        public string Image { get; set; } = string.Empty;
 
         public int Port { get; set; }
     }
 
     public class KubernetesMetaViewModel
     {
-        public string Uid { get; set; }
+        public string Uid { get; init; } = string.Empty;
         
-        public string Name { get; set; }
+        public string Name { get; init; } = string.Empty;
 
-        public string ApiVersion { get; set; }
+        public string ApiVersion { get; init; } = string.Empty;
 
-        public string Kind { get; set; }
+        public string Kind { get; init; } = string.Empty;
 
-        public DateTime? CreationTimestamp { get; set; }
+        public DateTime? CreationTimestamp { get; init; }
        
     }
 }
