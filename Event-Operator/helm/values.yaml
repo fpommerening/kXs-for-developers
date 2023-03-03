@@ -1,0 +1,77 @@
+# Default values for event-operator.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+global:
+  imagePullSecrets: []
+  ingressClass: ""
+  baseUrl: "t.container-training.de"
+
+data:
+  claimName: "portal-data-pvc"
+  accessModes: "ReadWriteOnce"
+  size: "2Mi"
+  storageClassName: "local-path"
+
+codeServer:
+  image:
+    repository: fpommerening/container-training
+    pullPolicy: IfNotPresent
+    tag: "code-server"
+  resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+  service:
+    type: ClusterIP
+    port: 3000
+  password: "set-a-pw"
+  ingressRoute:
+    prefix: "code"
+    entryPoint: "websecure"
+    priority: 10
+    certResolver: "lets-encrypt-prod"
+
+webProxy:
+  image:
+    repository: nginx
+    pullPolicy: IfNotPresent
+    tag: "latest"
+  resources: {}
+  service:
+    type: ClusterIP
+    port: 80
+  targetServer: "5.104.107.108"
+  ingressRoute:
+    entryPoint: "web"
+    priority: 5
+  
+shellInABox:
+  image:
+    repository: fpommerening/container-training
+    pullPolicy: IfNotPresent
+    tag: "shellinabox"
+  resources: {}
+  service:
+    type: ClusterIP
+    port: 80
+  password: "set-a-pw"
+  sshKey:
+    enabled: true
+    secretName: "portal-ssh-secret"
+  ingressRoute:
+    prefix: "console"
+    entryPoint: "websecure"
+    priority: 10
+    certResolver: "lets-encrypt-prod"
+
+  
+
+

@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: portal-shell-in-a-box-dep
+  labels:
+    {{- include "event-operator.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "event-operator.selectorLabels" . | nindent 6 }}
+      app: shell-in-a-box
+  template:
+    metadata:
+      labels:
+        {{- include "event-operator.selectorLabels" . | nindent 8 }}
+        app: shell-in-a-box
+    spec:
+      {{- with .Values.global.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: app
+          image: "{{ .Values.shellInABox.image.repository }}:{{ .Values.shellInABox.image.tag }}"
+          imagePullPolicy: {{ .Values.shellInABox.image.pullPolicy }}
+          env:
+            - name: "SIAB_SSL"
+              value: "0"
+            - name: "SIAB_SUDO"
+              value: "true"
+            - name: "SIAB_PASSWORD"
+              value: {{ .Values.shellInABox.password }}
+          ports:
+            - name: http
+              containerPort: 4200
+              protocol: TCP
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+          resources:
+            {{- toYaml .Values.shellInABox.resources | nindent 12 }}
+          volumeMounts:
+            - mountPath: "/share/data"
+              name: data
+            - mountPath: "/share/.kube/"
+              name: kube
+          {{ if eq .Values.shellInABox.sshKey.enabled true }}
+            - mountPath: "/share/.ssh/"
+              name: ssh
+          {{end}}
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: {{ .Values.data.claimName }}
+        - name: kube
+          secret:
+            secretName: portal-kube-secret
+      {{ if eq .Values.shellInABox.sshKey.enabled true }}
+        - name: ssh
+          secret:
+            secretName: {{ .Values.shellInABox.sshKey.secretName }}
+      {{end}}

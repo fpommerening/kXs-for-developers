@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: portal-proxy-dep
+  labels:
+    {{- include "event-operator.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "event-operator.selectorLabels" . | nindent 6 }}
+      app: nginx-proxy
+  template:
+    metadata:
+      labels:
+        {{- include "event-operator.selectorLabels" . | nindent 8 }}
+        app: nginx-proxy
+    spec:
+      {{- with .Values.global.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: app
+          image: "{{ .Values.webProxy.image.repository }}:{{ .Values.webProxy.image.tag }}"
+          imagePullPolicy: {{ .Values.webProxy.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 80
+              protocol: TCP
+          # livenessProbe:
+          #  httpGet:
+          #    path: /
+          #    port: http
+          # readinessProbe:
+          #  httpGet:
+          #    path: /
+          #    port: http
+          resources:
+            {{- toYaml .Values.webProxy.resources | nindent 12 }}
+          volumeMounts:
+            - mountPath: "/etc/nginx/nginx.conf"
+              name: config
+              subPath: "nginx.conf"
+      volumes:
+        - name: config
+          configMap:
+            name: portal-proxy-cm

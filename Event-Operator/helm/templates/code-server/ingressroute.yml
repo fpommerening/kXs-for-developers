@@ -1,0 +1,24 @@
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: portal-code-server-ir
+  labels:
+    {{- include "event-operator.labels" . | nindent 4 }}
+  {{ if .Values.global.ingressClass }}    
+  annotations: 
+    kubernetes.io/ingress.class: {{ .Values.global.ingressClass }}
+  {{ end }}
+spec:
+  entryPoints:
+  - {{ .Values.codeServer.ingressRoute.entryPoint }}
+  routes:
+  - match: Host(`{{ .Values.codeServer.ingressRoute.prefix }}.{{ .Values.global.baseUrl }}`)
+    kind: Rule
+    priority: {{ .Values.codeServer.ingressRoute.priority }}
+    services:
+    - name: portal-code-server-srv
+      port:  {{ .Values.codeServer.service.port }}
+  {{ if .Values.codeServer.ingressRoute.certResolver }}    
+  tls:
+    certResolver: {{ .Values.codeServer.ingressRoute.certResolver }}
+  {{ end }}

@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ .Values.data.claimName }}
+  labels:
+    {{- include "event-operator.labels" . | nindent 4 }}
+spec:
+spec:
+  accessModes:
+    - {{ .Values.data.accessModes }}
+  volumeMode: Filesystem
+  resources:
+    requests:
+      storage: {{ .Values.data.size }}
+  storageClassName: {{ .Values.data.storageClassName }}

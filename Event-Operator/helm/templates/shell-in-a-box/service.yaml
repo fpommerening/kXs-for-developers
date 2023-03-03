@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: portal-shell-in-a-box-srv
+  labels:
+    {{- include "event-operator.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.shellInABox.service.type }}
+  ports:
+    - port: {{ .Values.shellInABox.service.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "event-operator.selectorLabels" . | nindent 4 }}
+    app: shell-in-a-box

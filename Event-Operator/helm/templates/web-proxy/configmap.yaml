@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: portal-proxy-cm
+data:
+  nginx.conf: |-
+    user nginx;
+    worker_processes auto;
+    error_log /var/log/nginx/error.log notice;
+    pid /var/run/nginx.pid;
+    events {
+      worker_connections 1024;
+    }
+    stream {
+      upstream http_cluster {
+        server {{ .Values.webProxy.targetServer }}:80;
+      }
+    server {
+      listen 80;
+      proxy_pass http_cluster;
+      }
+    }

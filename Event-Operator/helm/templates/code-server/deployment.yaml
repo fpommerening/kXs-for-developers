@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: portal-code-server-dep
+  labels:
+    {{- include "event-operator.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "event-operator.selectorLabels" . | nindent 6 }}
+      app: code-server
+  template:
+    metadata:
+      labels:
+        {{- include "event-operator.selectorLabels" . | nindent 8 }}
+        app: code-server
+    spec:
+      {{- with .Values.global.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: app
+          image: "{{ .Values.codeServer.image.repository }}:{{ .Values.codeServer.image.tag }}"
+          imagePullPolicy: {{ .Values.codeServer.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            - mountPath: "/home/coder/data"
+              name: data
+            - mountPath: "/home/coder/.config/code-server/config.yaml"
+              name: auth
+              subPath: "config.yaml"
+            - mountPath: "/share/.kube/"
+              name: kube
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: {{ .Values.data.claimName }}
+        - name: auth
+          configMap:
+            name: portal-code-server-cm
+        - name: kube
+          secret:
+            secretName: portal-kube-secret
+
