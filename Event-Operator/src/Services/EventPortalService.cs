@@ -1,31 +1,23 @@
 ﻿using FP.ContainerTraining.EventOperator.CustomResources;
-using k8s;
 
 namespace FP.ContainerTraining.EventOperator.Services;
 
 public class EventPortalService : BackgroundService
 {
-    private readonly IKubernetes _kubernetes;
-    private readonly CustomResourceDefinition<EventPortal> _crd;
-    private readonly EventPortalHandler _handler;
-    private readonly IConfiguration _configuration;
+    private readonly Watcher<EventPortal> _watcher;
 
-    public EventPortalService(IKubernetes kubernetes, CustomResourceDefinition<EventPortal> crd, EventPortalHandler handler, IConfiguration configuration)
+    public EventPortalService(Watcher<EventPortal> watcher)
     {
-        _kubernetes = kubernetes;
-        _crd = crd;
-        _handler = handler;
-        _configuration = configuration;
+        _watcher = watcher;
     }
     
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        var portalNamespace = _configuration["PortalNamespace"]!;
         while (!stoppingToken.IsCancellationRequested)
         {
-            _crd.Watch(_kubernetes, _handler, portalNamespace);
-            await _handler.CheckCurrentState(_crd, portalNamespace);
-            await Task.Delay(60000, stoppingToken);
+            _watcher.Ensure();
+            await _watcher.CheckCurrentState();
+            await Task.Delay(TimeSpan.FromSeconds(60), stoppingToken);
         }
     }
 }

@@ -1,5 +1,4 @@
 ﻿using k8s;
-using k8s.Autorest;
 
 namespace FP.ContainerTraining.EventOperator.CustomResources;
 
@@ -8,15 +7,17 @@ public class Watcher<T> where T : CustomResource
     private readonly IKubernetes _kubernetes;
     private readonly CustomResourceDefinition<T> _crd;
     private readonly ICustomerResourceHandler<T> _handler;
+    private readonly ILogger<Watcher<T>> _logger;
     private k8s.Watcher<T>? _innerWatcher;
     private readonly string _namespace;
 
     public Watcher(IKubernetes kubernetes, CustomResourceDefinition<T> crd,
-        ICustomerResourceHandler<T> handler, string @namespace)
+        ICustomerResourceHandler<T> handler, ILogger<Watcher<T>> logger, string @namespace)
     {
         _kubernetes = kubernetes;
         _crd = crd;
         _handler = handler;
+        _logger = logger;
         _namespace = @namespace;
     }
 
@@ -38,12 +39,18 @@ public class Watcher<T> where T : CustomResource
         _innerWatcher = listResponse.Watch<T, object>(OnChange, OnError, OnClose);
     }
 
+    public async Task CheckCurrentState()
+    {
+        await _handler.CheckCurrentState(_crd, _namespace);
+    }
+
     private void OnClose()
     {
     }
 
-    private void OnError(Exception obj)
+    private void OnError(Exception ex)
     {
+        _logger.LogError(ex, "Error on watching {CRD}", typeof(T).FullName);
     }
 
     private async void OnChange(WatchEventType eventType, T item)
@@ -67,15 +74,13 @@ public class Watcher<T> where T : CustomResource
                     await _handler.OnError(item);
                     break;
                 default:
-                    //Log.Warn($"Don't know what to do with {type}");
+                    _logger.LogWarning("Don't know what to do with {EventType}", eventType);
                     break;
             }
-
-            ;
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error on OnChange {eventType} - {item.Metadata.Name} \n {ex}");
+            _logger.LogError(ex, "Error on OnChange {EventType} - {ObjectName}", eventType, item.Metadata.Name);
         }
     }
 }

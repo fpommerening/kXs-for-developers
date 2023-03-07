@@ -23,6 +23,7 @@ builder.Services.AddSingleton<IKubernetes, Kubernetes>(_ =>
 
 builder.Services.AddCustomResources();
 builder.Services.AddCustomResourceHandler();
+builder.Services.AddCustomResourceWatcher(builder.Configuration);
 builder.Services.AddHostedService<EventPortalService>();
 
 

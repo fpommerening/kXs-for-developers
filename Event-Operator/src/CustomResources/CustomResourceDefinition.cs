@@ -68,10 +68,4 @@ public class CustomResourceDefinition<T> where T : CustomResource
 
             await customObjectsOperations.CreateNamespacedCustomObjectAsync(obj, Group, Version, @namespace, Plural);
         }
-
-        public void Watch(IKubernetes kubernetes, ICustomerResourceHandler<T> handler, string @namespace = "default")
-        {
-            _watcher ??= new Watcher<T>(kubernetes, this, handler, @namespace);
-            _watcher.Ensure();
-        }
     }
