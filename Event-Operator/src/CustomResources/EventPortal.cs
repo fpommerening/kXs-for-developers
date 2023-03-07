@@ -6,17 +6,17 @@ public class EventPortal : CustomResource<EventPortalSpec>
 
 public class EventPortalSpec
 {
-    public string Namespace { get; set; }
+    public string Namespace { get; set; } = string.Empty;
 
-    public string Server { get; set; }
+    public string Server { get; set; } = string.Empty;
 
-    public string SshUser { get; set; }
+    public string SshUser { get; set; } = string.Empty;
 
-    public string SshPassword { get; set; }
+    public string? SshPassword { get; set; }
 
-    public string PortalPassword { get; set; }
+    public string PortalPassword { get; set; } = string.Empty;
 
-    public string BaseUrl { get; set; }
+    public string BaseUrl { get; set; } = string.Empty;
 
     public EventPortalApplicationSpec ShellInABox { get; set; } = new EventPortalApplicationSpec
     {
@@ -36,9 +36,9 @@ public class EventPortalSpec
 
 public class EventPortalApplicationSpec
 {
-    public string Prefix { get; set; }
+    public string Prefix { get; set; } = string.Empty;
 
-    public string Image { get; set; }
+    public string Image { get; set; } = string.Empty;
 
     public int Port { get; set; }
 }

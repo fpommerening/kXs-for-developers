@@ -8,7 +8,7 @@ public class Watcher<T> where T : CustomResource
     private readonly IKubernetes _kubernetes;
     private readonly CustomResourceDefinition<T> _crd;
     private readonly ICustomerResourceHandler<T> _handler;
-    private k8s.Watcher<T> _innerWatcher;
+    private k8s.Watcher<T>? _innerWatcher;
     private readonly string _namespace;
 
     public Watcher(IKubernetes kubernetes, CustomResourceDefinition<T> crd,
@@ -22,8 +22,6 @@ public class Watcher<T> where T : CustomResource
 
     public void Ensure()
     {
-        Task<HttpOperationResponse<object>> listResponse = null;
-
         if (_innerWatcher is { Watching: false })
         {
             _innerWatcher.Dispose();
@@ -35,7 +33,7 @@ public class Watcher<T> where T : CustomResource
             return;
         }
 
-        listResponse = _kubernetes.CustomObjects.ListNamespacedCustomObjectWithHttpMessagesAsync(_crd.Group, _crd.Version,
+        var listResponse = _kubernetes.CustomObjects.ListNamespacedCustomObjectWithHttpMessagesAsync(_crd.Group, _crd.Version,
                 _namespace, _crd.Plural, watch: true);
         _innerWatcher = listResponse.Watch<T, object>(OnChange, OnError, OnClose);
     }
@@ -64,12 +62,10 @@ public class Watcher<T> where T : CustomResource
                     await _handler.OnDeleted(item);
                     break;
                 case WatchEventType.Bookmark:
-
                     break;
                 case WatchEventType.Error:
                     await _handler.OnError(item);
                     break;
-                    return;
                 default:
                     //Log.Warn($"Don't know what to do with {type}");
                     break;

@@ -36,22 +36,28 @@
                     }
                 </MudStack>
             </MudTabPanel>
-            <MudTabPanel Text="Code-Server">
-                <MudStack>
-                    <MudTextField @bind-Value="Model.CodeServer.Image" Label="Image" ReadOnly="true"/>
-                    <MudTextField @bind-Value="Model.CodeServer.Port" Label="Port" ReadOnly="true"/>
-                    <MudTextField @bind-Value="Model.CodeServer.Prefix" Label="Prefix" ReadOnly="true"/>
-                    <MudButton FullWidth="false" Variant="Variant.Outlined" Color="Color.Primary" OnClick="async () => await RestartCodeServer()">Neustarten</MudButton>
-                </MudStack>
-            </MudTabPanel>
-            <MudTabPanel Text="Console">
-                <MudStack>
-                    <MudTextField @bind-Value="Model.ShellInABox.Image" Label="Image" ReadOnly="true"/>
-                    <MudTextField @bind-Value="Model.ShellInABox.Port" Label="Port" ReadOnly="true"/>
-                    <MudTextField @bind-Value="Model.ShellInABox.Prefix" Label="Prefix" ReadOnly="true"/>
-                    <MudButton FullWidth="false" Variant="Variant.Outlined" Color="Color.Primary" OnClick="async () => await RestartConsole()">Neustarten</MudButton>
-                </MudStack>
-            </MudTabPanel>
+            @if (Model.CodeServer is not null)
+            {
+                <MudTabPanel Text="Code-Server">
+                    <MudStack>
+                        <MudTextField @bind-Value="Model.CodeServer.Image" Label="Image" ReadOnly="true"/>
+                        <MudTextField @bind-Value="Model.CodeServer.Port" Label="Port" ReadOnly="true"/>
+                        <MudTextField @bind-Value="Model.CodeServer.Prefix" Label="Prefix" ReadOnly="true"/>
+                        <MudButton FullWidth="false" Variant="Variant.Outlined" Color="Color.Primary" OnClick="async () => await RestartCodeServer()">Neustarten</MudButton>
+                    </MudStack>
+                </MudTabPanel>
+            }
+            @if (Model.ShellInABox is not null)
+            {
+                <MudTabPanel Text="Console">
+                    <MudStack>
+                        <MudTextField @bind-Value="Model.ShellInABox.Image" Label="Image" ReadOnly="true"/>
+                        <MudTextField @bind-Value="Model.ShellInABox.Port" Label="Port" ReadOnly="true"/>
+                        <MudTextField @bind-Value="Model.ShellInABox.Prefix" Label="Prefix" ReadOnly="true"/>
+                        <MudButton FullWidth="false" Variant="Variant.Outlined" Color="Color.Primary" OnClick="async () => await RestartConsole()">Neustarten</MudButton>
+                    </MudStack>
+                </MudTabPanel>
+            }
         </MudTabs>
     </MudItem>
     
@@ -76,9 +82,9 @@
 
 
 @code {
-    
+
     [Parameter]
-    public string Name { get; set; }
+    public string Name { get; set; } = string.Empty;
     
     private EventPortalViewModel? Model { get; set; }
     
@@ -226,7 +232,7 @@
         
         public string SshUser { get; set; } = string.Empty;
 
-        public string SshPassword { get; set; } = string.Empty;
+        public string? SshPassword { get; set; }
 
         public string PortalPassword { get; set; } = string.Empty;
 

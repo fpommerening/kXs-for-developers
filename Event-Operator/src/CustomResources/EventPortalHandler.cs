@@ -72,7 +72,7 @@ public class EventPortalHandler : ICustomerResourceHandler<EventPortal>
             sbNginxProxyConfig.AppendLine(" }");
             sbNginxProxyConfig.AppendLine("}");
 
-            byte[] kubeLocalBytes = null;
+            byte[] kubeLocalBytes;
 
             //var kubeLocalBytes = System.IO.File.ReadAllBytes(@"c:\temp\k3s.yaml");
             if (string.IsNullOrWhiteSpace(crd.Spec.SshPassword))
