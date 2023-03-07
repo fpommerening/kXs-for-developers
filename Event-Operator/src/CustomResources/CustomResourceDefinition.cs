@@ -7,8 +7,6 @@ namespace FP.ContainerTraining.EventOperator.CustomResources;
 
 public class CustomResourceDefinition<T> where T : CustomResource
     {
-        private Watcher<T>? _watcher;
-
         public CustomResourceDefinition(string group, string version, string plural, string singular, string kind)
         {
             Group = group;
