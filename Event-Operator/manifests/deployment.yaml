@@ -17,5 +17,8 @@ spec:
       serviceAccountName: event-operator-service-account
       containers:
         - name: app
-          image: "fpommerening/container-training:event-operator"
+          image: "ghcr.io/fpommerening/kxs-for-developers:event-operator"
+      ports:
+        - containerPort: 80
+          name: http
           
