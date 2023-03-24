@@ -148,6 +148,7 @@ public class EventPortalHandler : ICustomerResourceHandler<EventPortal>
 
     public Task OnUpdated(EventPortal crd)
     {
+        // TODO: update current state with CRD
         return Task.CompletedTask;
 
     }
@@ -166,6 +167,7 @@ public class EventPortalHandler : ICustomerResourceHandler<EventPortal>
             _logger.LogInformation("{ObjectsCount} items of {CrdKind} exists", objects.Count, crd.Kind);
             foreach (var obj in objects)
             {
+                // TODO: Compare current state with CRD and adjust if necessary
                 _logger.LogInformation("server: {Server} - baseurl {BaseUrl}", obj.Spec.Server, obj.Spec.BaseUrl);
             }
         }
