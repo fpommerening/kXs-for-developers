@@ -1,4 +1,5 @@
 using FP.ContainerTraining.EventOperator.Authentication;
+using FP.ContainerTraining.EventOperator.Business;
 using FP.ContainerTraining.EventOperator.CustomResources;
 using FP.ContainerTraining.EventOperator.Services;
 using k8s;
@@ -32,6 +33,7 @@ builder.Services.AddHostedService<EventPortalService>();
 builder.Services.AddScoped<ProtectedSessionStorage>();
 builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthenticationStateProvider>();
 builder.Services.AddTransient<UserAccountService>();
+builder.Services.AddSingleton<SnippetsRepository>();
 
 
 var app = builder.Build();

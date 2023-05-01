@@ -1,0 +1,120 @@
+﻿@page "/snippets"
+@using FP.ContainerTraining.EventOperator.Business
+
+@inject SnippetsRepository _snippetsRepository;
+
+<MudGrid>
+    <AuthorizeView>
+        <Authorized>
+            <MudItem xs="8">
+                <MudTextField 
+                    @bind-Value="Model.CreateContent" 
+                    Variant="Variant.Outlined" 
+                    Lines="8" 
+                    Label="New Snippet"/>
+            </MudItem>
+            <MudItem xs="4">
+                <MudButton 
+                    FullWidth="false" 
+                    Variant="Variant.Outlined" 
+                    Color="Color.Primary"
+                    OnClick="async () => await CreateSnippet()">Create</MudButton>
+            </MudItem>
+        </Authorized>
+    </AuthorizeView>
+    <MudItem xs="12">
+        <MudExpansionPanels>
+            @foreach (var snippet in @Model.SortedItems)
+            {
+                <MudExpansionPanel Text="@snippet.CreatedAt.ToString("T")" Tag="@snippet.Id" MaxHeight="150" IsInitiallyExpanded="@snippet.IsExpanded">
+                    <MudTextField T="string" 
+                                  Variant="Variant.Outlined"
+                                  Text="@snippet.Content"
+                                  ReadOnly="true"
+                                  Lines="5"/>
+                </MudExpansionPanel>
+            }
+        </MudExpansionPanels>
+         @if (!Model.Items.Any())
+         {
+             <MudText Typo="Typo.body1">Currently no snippets available</MudText>
+         }
+    </MudItem>
+   
+</MudGrid>
+
+@code {
+
+    private SnippetsViewModel Model { get; } = new SnippetsViewModel();
+    
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+
+        await RefreshSnippets();
+        
+        using var periodicTimer = new PeriodicTimer(TimeSpan.FromSeconds(30));
+        while (await periodicTimer.WaitForNextTickAsync())
+        {
+            await RefreshSnippets();
+        }
+    }
+
+    private async Task CreateSnippet()
+    {
+        var content = Model.CreateContent;
+        if (string.IsNullOrEmpty(content))
+        {
+            return;
+        }
+        await _snippetsRepository.AddSnippetAsync(content);
+        Model.CreateContent = string.Empty;
+        await RefreshSnippets();
+    }
+    
+    private async Task RefreshSnippets()
+    {
+        var snippets = await _snippetsRepository.GetSnippetsAsync();
+        var snippetsChanged = false;
+        foreach (var snippet in snippets.Where(snippet => Model.Items.All(x => x.Id != snippet.Id)))
+        {
+            Model.Items.Add(new SnippetViewModel
+            {
+                Id = snippet.Id,
+                Content = snippet.Content,
+                CreatedAt = snippet.CreatedAt
+            });
+            snippetsChanged = true;
+        }
+        if (snippetsChanged)
+        {
+            Model.Items.MaxBy(x => x.CreatedAt)!.IsExpanded = true;
+            await InvokeAsync(StateHasChanged);
+        }
+        
+    }
+
+    private class SnippetsViewModel
+    {
+        public IEnumerable<SnippetViewModel> SortedItems
+        {
+            get { return Items.OrderByDescending(x => x.CreatedAt); }
+        }
+
+        public List<SnippetViewModel> Items { get; } = new List<SnippetViewModel>();
+        
+        public string? CreateContent { get; set; }
+    }
+
+    private class SnippetViewModel
+    {
+        public Guid Id { get; set; }
+        
+        public DateTimeOffset CreatedAt { get; set; }
+        
+        public string Content { get; set; }
+        
+        public bool IsExpanded { get; set; }
+    }
+
+}
