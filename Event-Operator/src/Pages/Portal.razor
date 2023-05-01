@@ -1,4 +1,6 @@
-﻿@page "/portal/{name}"
+﻿@attribute [Authorize(Roles = "Administrator")]
+
+@page "/portal/{name}"
 @using FP.ContainerTraining.EventOperator.CustomResources
 @using k8s
 @using k8s.Models

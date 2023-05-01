@@ -1,0 +1,75 @@
+﻿@page "/login"
+@using FP.ContainerTraining.EventOperator.Authentication
+
+@inject UserAccountService _userAccountService;
+@inject NavigationManager _navigationManager;
+@inject AuthenticationStateProvider _authenticationStateProvider;
+@inject ISnackbar Snackbar
+
+<MudGrid>
+    <MudItem xs="3">
+    </MudItem>
+    <MudItem xs="6">
+        <MudTextField @bind-Value="Model.UserName" Label="Username"/>
+    </MudItem>
+    <MudItem xs="3">
+    </MudItem>
+    <MudItem xs="3">
+        </MudItem>
+    <MudItem xs="6">
+        <MudTextField 
+            @bind-Value="Model.Password" 
+            Label="Password" 
+            Variant="Variant.Text" 
+            InputType="@Model.PasswordInputType" 
+            Adornment="Adornment.End" 
+            AdornmentIcon="@Model.PasswordInputIcon"
+            OnAdornmentClick="PasswordVisibilityToggle" 
+            AdornmentAriaLabel="Show Password" />
+    </MudItem>
+    <MudItem xs="3">
+    </MudItem>
+    <MudItem xs="6">
+        </MudItem>
+    <MudItem xs="2">
+       <MudButton FullWidth="false" Variant="Variant.Outlined" Color="Color.Primary" OnClick="Authenticate">Authenticate</MudButton>
+    </MudItem>
+    <MudItem xs="4">
+        </MudItem>
+</MudGrid>
+
+@code {
+    private LoginViewModel Model { get; } = new LoginViewModel();
+
+    private void Authenticate()
+    {
+        if (_userAccountService.TryCreateUserSession(Model.UserName, Model.Password, out var userSession))
+        {
+            (_authenticationStateProvider as CustomAuthenticationStateProvider)?.UpdateAuthenticationState(userSession);
+            _navigationManager.NavigateTo("/", true);
+            Snackbar.Add($"Login successful", Severity.Success);
+            return;
+        }
+        Snackbar.Add($"Login failed", Severity.Error);
+    }
+
+    private void PasswordVisibilityToggle()
+    {
+        Model.PasswordIsVisible = !Model.PasswordIsVisible;
+    }
+
+    private class LoginViewModel
+    {
+        public string UserName { get; set; }
+        
+        public string Password { get; set; }
+        
+        public bool PasswordIsVisible { get; set; }
+
+        public string PasswordInputIcon => PasswordIsVisible ? 
+            Icons.Material.Filled.VisibilityOff : 
+            Icons.Material.Filled.Visibility;
+
+        public InputType PasswordInputType => PasswordIsVisible ? InputType.Text : InputType.Password;
+    }
+}

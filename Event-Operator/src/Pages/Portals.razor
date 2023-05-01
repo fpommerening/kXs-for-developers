@@ -2,6 +2,7 @@
 @page "/portals"
 @using FP.ContainerTraining.EventOperator.CustomResources
 @using k8s
+@using System.Security.Claims
 
 @inject CustomResourceDefinition<EventPortal> CrdEventPortal
 @inject IKubernetes Kubernetes;
@@ -25,16 +26,19 @@
                     <MudTd DataLabel="Server">@context.Server</MudTd>
                     <MudTd DataLabel="BaseUrl">@context.BaseUrl</MudTd>
                     <MudTd DataLabel="CreationTimestamp">@context.CreationTimestamp</MudTd>
-                    <MudTd> <MudIconButton
-                                Icon="@Icons.Material.Filled.Edit"
-                                Href="@($"portal/{context.Name}")">Öffnen</MudIconButton></MudTd>
+                    <MudTd>
+                        <MudIconButton
+                            Icon="@Icons.Material.Filled.Edit" Disabled="@context.DetailsDisabled"
+                            Href="@($"portal/{context.Name}")">Öffnen</MudIconButton>
+                    </MudTd>
                 </RowTemplate>
             </MudTable>
-        
     </MudItem>
-
 </MudGrid>
 @code {
+    
+    [CascadingParameter]
+    private Task<AuthenticationState> AuthenticationState { get; set; }
     
     private List<EventPortalViewModel> _data = new();
     
@@ -58,7 +62,8 @@
     
     private async Task RefreshEventPortals()
     {
-        
+        var authenticationState = await AuthenticationState;
+       
         var portals = await CrdEventPortal.GetObjectsAsync(Kubernetes, Configuration["PortalNamespace"]);
         foreach (var portal in portals)
         {
@@ -75,6 +80,7 @@
             vm.BaseUrl = portal.Spec.BaseUrl;
             vm.Namespace = portal.Spec.Namespace;
             vm.Server = portal.Spec.Server;
+            vm.DetailsDisabled = authenticationState.User.HasClaim(ClaimTypes.Role, "Administrator") == false;
         }
         _data.RemoveAll(x => portals.All(p => p.Metadata.Name != x.Name));
         await InvokeAsync(StateHasChanged);
@@ -93,6 +99,8 @@
         public string BaseUrl { get; set; } = string.Empty;
 
         public DateTime? CreationTimestamp { get; set; }
+        
+        public bool DetailsDisabled { get; set; }
     }
     
     
