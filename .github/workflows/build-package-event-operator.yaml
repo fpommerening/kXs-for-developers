@@ -1,8 +1,12 @@
 name: "custom event portal operator"
 
 on:
+  workflow_dispatch:
   push:
     branches: [ main ]
+    paths:
+      - 'Event-Operator/**'
+
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: event-operator
@@ -57,7 +61,7 @@ jobs:
     - name: Build and push
       uses: docker/build-push-action@v5
       with:
-        context: ./coffeemaker
+        context: ./Event-Operator
         platforms: linux/amd64,linux/arm64
         push: true
         tags: ${{ steps.meta.outputs.tags }}

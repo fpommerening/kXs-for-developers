@@ -1,8 +1,12 @@
 name: "custom hpa app"
 
 on:
+  workflow_dispatch:
   push:
     branches: [ main ]
+    paths:
+      - 'Custom-HPA/**'
+      
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
