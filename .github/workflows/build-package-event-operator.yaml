@@ -32,10 +32,10 @@ jobs:
         dotnet build --no-restore Event-Operator/src/Event-Operator.csproj
     - name: Publish amd 64
       run: |
-        dotnet publish -c release --no-self-contained -o Event-Operator/amd64 Event-Operator/src/Event-Operator.csproj
+        dotnet publish -c release -r linux-x64 --no-self-contained -o Event-Operator/amd64 Event-Operator/src/Event-Operator.csproj
     - name: Publish arm 64
       run: |
-        dotnet publish -c release --no-self-contained -o Event-Operator/arm64 Event-Operator/src/Event-Operator.csproj
+        dotnet publish -c release -r linux-arm64 --no-self-contained -o Event-Operator/arm64 Event-Operator/src/Event-Operator.csproj
   
     - name: Set up QEMU
       uses: docker/setup-qemu-action@v3
