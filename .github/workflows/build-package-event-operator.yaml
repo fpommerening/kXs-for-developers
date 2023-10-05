@@ -5,7 +5,7 @@ on:
     branches: [ main ]
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
+  IMAGE_NAME: event-operator
 
 jobs:
   build:
@@ -15,7 +15,7 @@ jobs:
       packages: write
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Setup .NET
       uses: actions/setup-dotnet@v3
       with:
@@ -26,33 +26,39 @@ jobs:
     - name: Build
       run: |
         dotnet build --no-restore Event-Operator/src/Event-Operator.csproj
-    - name: Publish
+    - name: Publish amd 64
       run: |
-        dotnet publish -c release -o Event-Operator/out/ Event-Operator/src/Event-Operator.csproj
+        dotnet publish -c release --no-self-contained -o Event-Operator/amd64 Event-Operator/src/Event-Operator.csproj
+    - name: Publish arm 64
+      run: |
+        dotnet publish -c release --no-self-contained -o Event-Operator/arm64 Event-Operator/src/Event-Operator.csproj
+  
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v3
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
 
     - name: Login to GHCR
-      uses: docker/login-action@v2.1.0
+      uses: docker/login-action@v3
       with:
         registry: ${{ env.REGISTRY }}
-        username: ${{ github.actor }}
+        username: ${{ github.repository_owner }}
         password: ${{ secrets.GITHUB_TOKEN }}
         
-    - name: Setup Docker Buildx
-      uses: docker/setup-buildx-action@v2
-
-    - name: Extract metadata worker
+    - name: Extract metadata (tags, labels) for Docker
       id: meta
-      uses: docker/metadata-action@v4
+      uses: docker/metadata-action@v5
       with:
-         images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-         tags: |
-           type=raw,value=event-operator
+        images: ${{ env.REGISTRY }}/${{ github.actor }}/${{ env.IMAGE_NAME }}
+        tags: |
+          type=raw,value=1.0.0
+          type=raw,value=latest
 
-
-    - name: Build and push manager
-      uses: docker/build-push-action@v3
+    - name: Build and push
+      uses: docker/build-push-action@v5
       with:
-        context: ./Event-Operator/
+        context: ./coffeemaker
+        platforms: linux/amd64,linux/arm64
         push: true
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
