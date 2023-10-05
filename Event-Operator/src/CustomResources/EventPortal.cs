@@ -20,14 +20,14 @@ public class EventPortalSpec
 
     public EventPortalApplicationSpec ShellInABox { get; set; } = new EventPortalApplicationSpec
     {
-        Image = "fpommerening/container-training:shellinabox",
+        Image = "ghcr.io/fpommerening/shellinabox:latest",
         Prefix = "console",
         Port = 4200
     };
 
     public EventPortalApplicationSpec CodeServer { get; set; } = new EventPortalApplicationSpec
     {
-        Image = "fpommerening/container-training:code-server",
+        Image = "ghcr.io/fpommerening/codeserver:latest",
         Prefix = "code",
         Port = 8080
 
