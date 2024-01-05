@@ -166,7 +166,7 @@ public class KubernetesHelper
     }
 
     public static async Task CreateClusterIpService(IKubernetes kubernetes, string name, string @namespace,
-        Dictionary<string, string> labels, Dictionary<string, string> selector, Dictionary<int, int> ports)
+        Dictionary<string, string> labels, Dictionary<string, string> selector, List<(string name, int port, int target)> ports)
     {
         var services = await kubernetes.CoreV1.ListNamespacedServiceAsync(@namespace);
         if (services.Items.Any(x => Match(x.Metadata, name, labels)))
@@ -175,7 +175,7 @@ public class KubernetesHelper
         }
 
         var servicePorts = ports.Select(port => new V1ServicePort
-            { Port = port.Key, Protocol = "TCP", TargetPort = port.Value }).ToList();
+            { Port = port.port, Name = name, Protocol = "TCP", TargetPort = port.target }).ToList();
 
         var service = new V1Service
         {
