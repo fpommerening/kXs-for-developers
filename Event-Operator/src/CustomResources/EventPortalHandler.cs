@@ -88,7 +88,7 @@ public class EventPortalHandler : ICustomerResourceHandler<EventPortal>
             await KubernetesHelper.CreateClusterIpService(_kubernetes, shellInABoxClusterIp, @namespace, DefaultLabel,
                 shellInABoxSelector, new List<(string name, int port, int target)>
                 {
-                    new ValueTuple<string, int, int>("server", 8080, codeServerApp.Port),
+                    new ValueTuple<string, int, int>("server", 8080, shellInABoxApp.Port),
                     new ValueTuple<string, int, int>("auth", 80, 80) 
                 });
 
