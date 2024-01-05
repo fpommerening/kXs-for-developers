@@ -52,7 +52,7 @@ public class EventPortalHandler : ICustomerResourceHandler<EventPortal>
 
             byte[] kubeLocalBytes;
 
-            //var kubeLocalBytes = System.IO.File.ReadAllBytes(@"c:\temp\k3s.yaml");
+            //kubeLocalBytes = System.IO.File.ReadAllBytes(@"c:\temp\k3s.yaml");
             if (string.IsNullOrWhiteSpace(crd.Spec.SshPassword))
             {
                 kubeLocalBytes = await SshHelper.GetRemoteFile(crd.Spec.Server, crd.Spec.SshUser, "/app/ssh/rsa_id",

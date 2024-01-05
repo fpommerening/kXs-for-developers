@@ -175,7 +175,7 @@ public class KubernetesHelper
         }
 
         var servicePorts = ports.Select(port => new V1ServicePort
-            { Port = port.port, Name = name, Protocol = "TCP", TargetPort = port.target }).ToList();
+            { Port = port.port, Name = port.name, Protocol = "TCP", TargetPort = port.target }).ToList();
 
         var service = new V1Service
         {
