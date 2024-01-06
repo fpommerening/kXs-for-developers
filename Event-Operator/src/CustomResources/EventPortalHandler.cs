@@ -37,7 +37,8 @@ public class EventPortalHandler : ICustomerResourceHandler<EventPortal>
             var shellInABoxClusterIp = "portal-shell-in-a-box-srv";
 
             var codeServerRoute = "portal-code-server-ir";
-            var shellInABoxRoute = "portal-shell-in-a-box-ir";
+            var shellInABoxServerRoute = "portal-shell-in-a-box-server-ir";
+            var shellInABoxAuthRoute = "portal-shell-in-a-box-auth-ir";
 
             var baseUrl = crd.Spec.BaseUrl;
 
@@ -95,10 +96,10 @@ public class EventPortalHandler : ICustomerResourceHandler<EventPortal>
             await KubernetesHelper.CreateIngressRoute(_kubernetes, codeServerRoute, @namespace, DefaultLabel,
                 _crdIngressRoute, "web", $"Host(`{codeServerApp.Prefix}.{baseUrl}`)", 10,
                 new Dictionary<string, int> { { codeServerClusterIp, 80 } }, "traefik-external");
-            await KubernetesHelper.CreateIngressRoute(_kubernetes, shellInABoxRoute, @namespace, DefaultLabel,
+            await KubernetesHelper.CreateIngressRoute(_kubernetes, shellInABoxServerRoute, @namespace, DefaultLabel,
                 _crdIngressRoute, "web", $"Host(`{shellInABoxApp.Prefix}.{baseUrl}`)", 10,
                 new Dictionary<string, int> { { shellInABoxClusterIp, 8080 } }, "traefik-external");
-            await KubernetesHelper.CreateIngressRoute(_kubernetes, shellInABoxRoute, @namespace, DefaultLabel,
+            await KubernetesHelper.CreateIngressRoute(_kubernetes, shellInABoxAuthRoute, @namespace, DefaultLabel,
                 _crdIngressRoute, "web", $"Host(`auth.{baseUrl}`)", 10,
                 new Dictionary<string, int> { { shellInABoxClusterIp, 80 } }, "traefik-external");
         }
