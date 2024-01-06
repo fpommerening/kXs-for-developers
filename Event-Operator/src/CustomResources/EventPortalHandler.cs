@@ -217,6 +217,28 @@ public class EventPortalHandler : ICustomerResourceHandler<EventPortal>
                                 }
                             }
                         },
+                        DnsPolicy = "None",
+                        DnsConfig = new V1PodDNSConfig
+                        {
+                            Nameservers = new List<string>
+                            {
+                                "192.168.163.1"
+                            },
+                            Searches = new List<string>
+                            {
+                                "default.svc.cluster.local",
+                                "svc.cluster.local",
+                                "cluster.local"
+                            },
+                            Options = new List<V1PodDNSConfigOption>
+                            {
+                                new()
+                                {
+                                    Name = "ndits",
+                                    Value = "5"
+                                }
+                            }
+                        },
                         Volumes = new List<V1Volume>
                         {
                             new V1Volume
@@ -342,6 +364,28 @@ public class EventPortalHandler : ICustomerResourceHandler<EventPortal>
                                         Name = "auth",
                                         ContainerPort = 80
                                     }
+                                }
+                            }
+                        },
+                        DnsPolicy = "None",
+                        DnsConfig = new V1PodDNSConfig
+                        {
+                            Nameservers = new List<string>
+                            {
+                                "192.168.163.1"
+                            },
+                            Searches = new List<string>
+                            {
+                                "default.svc.cluster.local",
+                                "svc.cluster.local",
+                                "cluster.local"
+                            },
+                            Options = new List<V1PodDNSConfigOption>
+                            {
+                                new()
+                                {
+                                    Name = "ndits",
+                                    Value = "5"
                                 }
                             }
                         },
