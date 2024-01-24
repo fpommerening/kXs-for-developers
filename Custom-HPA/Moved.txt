@@ -1,0 +1,1 @@
+Source moved to: https://github.com/fpommerening/container-training/tree/main/custom-hpa

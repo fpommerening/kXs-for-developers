@@ -3,6 +3,8 @@ kind: IngressRoute
 metadata:
   name: custom-hpa-ir
   namespace: custom-metrics
+  annotations: 
+    kubernetes.io/ingress.class: traefik-external
 spec:
   entryPoints:
   - websecure
@@ -14,12 +16,15 @@ spec:
       port: 5001
   tls:
     certResolver: lets-encrypt-prod
+
 ---
 apiVersion: traefik.containo.us/v1alpha1
 kind: IngressRoute
 metadata:
   name: prometheus-ir
   namespace: monitoring
+  annotations: 
+    kubernetes.io/ingress.class: traefik-external
 spec:
   entryPoints:
   - websecure

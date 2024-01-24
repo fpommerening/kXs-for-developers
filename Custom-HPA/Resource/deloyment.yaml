@@ -15,7 +15,7 @@ spec:
         app: manager
     spec:
       containers:
-      - image: ghcr.io/fpommerening/kxs-for-developers:hpa-manager
+      - image: ghcr.io/fpommerening/container-training.custom-hpa:manager
         imagePullPolicy: Always
         name: app
         ports:
@@ -50,7 +50,7 @@ spec:
         app: worker
     spec:
       containers:
-      - image: ghcr.io/fpommerening/kxs-for-developers:hpa-worker
+      - image: ghcr.io/fpommerening/container-training.custom-hpa:worker
         imagePullPolicy: Always
         name: app
         volumeMounts:
