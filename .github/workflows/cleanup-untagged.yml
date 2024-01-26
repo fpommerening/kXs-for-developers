@@ -1,0 +1,23 @@
+name: Cleaup untagged images
+on:
+  workflow_dispatch:
+
+permissions: 
+  packages: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:  
+      - uses: actions/delete-package-versions@v4
+        with:
+          package-name: 'kxs-for-developers'
+          package-type: 'container'
+          min-versions-to-keep: 0
+          delete-only-untagged-versions: 'true'
+      - uses: actions/delete-package-versions@v4
+        with:
+          package-name: 'event-operator'
+          package-type: 'container'
+          min-versions-to-keep: 0
+          delete-only-untagged-versions: 'true'
