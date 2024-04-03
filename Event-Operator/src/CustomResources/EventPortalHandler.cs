@@ -47,8 +47,15 @@ public class EventPortalHandler : ICustomerResourceHandler<EventPortal>
 
             var sbCodeServerConfig = new StringBuilder();
             sbCodeServerConfig.AppendLine("bind-addr: 127.0.0.1:8080");
-            sbCodeServerConfig.AppendLine("auth: password");
-            sbCodeServerConfig.AppendLine($"password: {crd.Spec.PortalPassword}");
+            if (string.IsNullOrEmpty(crd.Spec.PortalPassword))
+            {
+                sbCodeServerConfig.AppendLine("auth: none");
+            }
+            else
+            {
+                sbCodeServerConfig.AppendLine("auth: password");
+                sbCodeServerConfig.AppendLine($"password: {crd.Spec.PortalPassword}");    
+            }
             sbCodeServerConfig.AppendLine("cert: false");
 
             byte[] kubeLocalBytes;
@@ -351,6 +358,10 @@ public class EventPortalHandler : ICustomerResourceHandler<EventPortal>
                                     new V1EnvVar
                                     {
                                         Name = "SIAB_PASSWORD", Value = password
+                                    },
+                                    new V1EnvVar
+                                    {
+                                        Name = "SIAB_SERVICE", Value = "/:coder:coder:/home/coder:bash"
                                     },
                                 },
                                 Ports = new List<V1ContainerPort>
