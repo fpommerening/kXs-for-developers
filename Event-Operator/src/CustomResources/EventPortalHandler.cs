@@ -47,7 +47,7 @@ public class EventPortalHandler : ICustomerResourceHandler<EventPortal>
 
             var sbCodeServerConfig = new StringBuilder();
             sbCodeServerConfig.AppendLine("bind-addr: 127.0.0.1:8080");
-            if (string.IsNullOrEmpty(crd.Spec.PortalPassword))
+            if (string.Equals(crd.Spec.PortalPassword, "none"))
             {
                 sbCodeServerConfig.AppendLine("auth: none");
             }
