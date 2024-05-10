@@ -14,5 +14,5 @@ additionalPrometheusRulesMap:
     - name: manager
       rules:
       - record: custom_worker_rate
-        expr:  (current_jobs  / current_worker)
+        expr:  (current_jobs_total  / current_worker_total)
 
