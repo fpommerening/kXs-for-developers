@@ -324,6 +324,7 @@ public class EventPortalHandler : ICustomerResourceHandler<EventPortal>
                     },
                     Spec = new V1PodSpec
                     {
+                        Hostname = "siab",
                         Containers = new List<V1Container>
                         {
                             new V1Container
