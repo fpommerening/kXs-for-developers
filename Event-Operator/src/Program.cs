@@ -1,9 +1,8 @@
-using FP.ContainerTraining.EventOperator.Authentication;
+using FP.ContainerTraining.EventOperator;
 using FP.ContainerTraining.EventOperator.Business;
 using FP.ContainerTraining.EventOperator.CustomResources;
 using FP.ContainerTraining.EventOperator.Services;
 using k8s;
-using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
 using Microsoft.AspNetCore.Hosting.StaticWebAssets;
 using MudBlazor.Services;
@@ -12,7 +11,8 @@ var builder = WebApplication.CreateBuilder(args);
 
 StaticWebAssetsLoader.UseStaticWebAssets(builder.Environment, builder.Configuration);
 
-builder.Services.AddAuthenticationCore();
+builder.ConfigureAuthentication();
+builder.Services.AddControllers();
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
 builder.Services.AddMudServices();
@@ -31,8 +31,6 @@ builder.Services.AddCustomResourceWatcher(builder.Configuration);
 builder.Services.AddHostedService<EventPortalService>();
 
 builder.Services.AddScoped<ProtectedSessionStorage>();
-builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthenticationStateProvider>();
-builder.Services.AddTransient<UserAccountService>();
 builder.Services.AddSingleton<SnippetsRepository>();
 
 
@@ -48,7 +46,12 @@ if (!app.Environment.IsDevelopment())
 app.UseStaticFiles();
 
 app.UseRouting();
+app.UseAntiforgery();
 
+app.UseAuthentication();
+app.UseAuthorization();
+
+app.MapDefaultControllerRoute();
 app.MapBlazorHub();
 app.MapFallbackToPage("/_Host");
 

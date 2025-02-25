@@ -13,10 +13,10 @@
         <MudSpacer />
         <AuthorizeView>
             <NotAuthorized>
-                <MudIconButton Icon="@Icons.Material.Filled.Login" Title="Login" Color="Color.Inherit"  Href="/login" />
+                <MudIconButton Icon="@Icons.Material.Filled.Login" Title="Login" Color="Color.Inherit"  Href="/account/login" />
             </NotAuthorized>
             <Authorized>
-                <MudIconButton Icon="@Icons.Material.Filled.Logout" Title="Logout" Color="Color.Inherit" OnClick="Logout"  Href="/login" />
+                <MudIconButton Icon="@Icons.Material.Filled.Logout" Title="Logout" Color="Color.Inherit" Href="/account/logout" />
             </Authorized>
         </AuthorizeView>
     </MudAppBar>
@@ -39,11 +39,5 @@
     void DrawerToggle()
     {
         _drawerOpen = !_drawerOpen;
-    }
-
-    void Logout()
-    {
-        (_authenticationStateProvider as CustomAuthenticationStateProvider)?.UpdateAuthenticationState(null);
-        _navigationManager.NavigateTo("/", true);
     }
 }

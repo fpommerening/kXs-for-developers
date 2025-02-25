@@ -4,7 +4,7 @@
 @inject SnippetsRepository _snippetsRepository;
 
 <MudGrid>
-    <AuthorizeView>
+    <AuthorizeView Policy="IsEventPortalAdmin">
         <Authorized>
             <MudItem xs="8">
                 <MudTextField 
