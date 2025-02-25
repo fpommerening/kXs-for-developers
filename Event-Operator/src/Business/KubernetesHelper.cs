@@ -52,7 +52,7 @@ public class KubernetesHelper
             },
             Spec = new V1PersistentVolumeClaimSpec
             {
-                Resources = new V1ResourceRequirements
+                Resources = new V1VolumeResourceRequirements
                 {
                     Requests = new Dictionary<string, ResourceQuantity>
                     {
