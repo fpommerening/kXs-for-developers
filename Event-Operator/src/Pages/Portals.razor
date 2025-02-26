@@ -3,6 +3,7 @@
 @using FP.ContainerTraining.EventOperator.CustomResources
 @using k8s
 @using System.Security.Claims
+@using FP.ContainerTraining.EventOperator.Authentication
 
 @inject CustomResourceDefinition<EventPortal> CrdEventPortal
 @inject IKubernetes Kubernetes;
@@ -63,6 +64,7 @@
     private async Task RefreshEventPortals()
     {
         var authenticationState = await AuthenticationState;
+        var oidcSettings = Configuration.GetSection("OIDC").Get<OidcSettings>();
        
         var portals = await CrdEventPortal.GetObjectsAsync(Kubernetes, Configuration["PortalNamespace"]);
         foreach (var portal in portals)
@@ -80,7 +82,8 @@
             vm.BaseUrl = portal.Spec.BaseUrl;
             vm.Namespace = portal.Spec.Namespace;
             vm.Server = portal.Spec.Server;
-            vm.DetailsDisabled = authenticationState.User.HasClaim(ClaimTypes.Role, "Administrator") == false;
+            vm.DetailsDisabled = oidcSettings == null || 
+                                 authenticationState.User.HasClaim("groups", oidcSettings.AdminGroup) == false;
         }
         _data.RemoveAll(x => portals.All(p => p.Metadata.Name != x.Name));
         await InvokeAsync(StateHasChanged);
