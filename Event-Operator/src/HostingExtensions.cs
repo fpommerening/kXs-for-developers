@@ -18,6 +18,7 @@ public static class HostingExtensions
             {
                 options.Cookie.Name = "__Host-blazor";
                 options.Cookie.SameSite = SameSiteMode.Lax;
+                options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
 
                 options.EventsType = typeof(CookieEvents);
             })
