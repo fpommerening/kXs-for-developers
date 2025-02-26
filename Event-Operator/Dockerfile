@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/dotnet/aspnet:6.0-focal
+FROM mcr.microsoft.com/dotnet/aspnet:9.0-bookworm-slim
 ARG TARGETARCH
 EXPOSE 80/TCP
 WORKDIR /app/
